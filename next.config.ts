@@ -1,0 +1,35 @@
+import type { NextConfig } from "next";
+
+const API = process.env.API_ORIGIN || "http://localhost:4009";
+
+// Paths the NestJS backend keeps serving (API, its own rendered pages, webhooks, media, the widget).
+// Next only forwards them, so the browser sees one origin exactly like the old single-server app.
+const BACKEND_PATHS = [
+  "/api/:path*",
+  "/widget.js",
+  "/cars/:path*",
+  "/d/:path*",
+  "/customer/:path*",
+  "/me/:path*",
+  "/media/:path*",
+  "/guide",
+  "/guide/:path*",
+  "/sheet/:path*",
+  "/webhook",
+  "/twilio/:path*",
+  "/verify-email",
+  "/auth/google",
+  "/auth/google/:path*",
+  "/healthz",
+  "/readyz",
+];
+
+const nextConfig: NextConfig = {
+  // The dev "N" badge sits on top of the rail's "Collapse menu" button.
+  devIndicators: false,
+  async rewrites() {
+    return BACKEND_PATHS.map((source) => ({ source, destination: `${API}${source}` }));
+  },
+};
+
+export default nextConfig;

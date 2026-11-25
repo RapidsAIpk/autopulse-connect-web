@@ -1,0 +1,4 @@
+/* The old app's stylesheet is linked as-is (/assets/styles.css) so the look cannot drift.
+   Tailwind is wired like the example app, WITHOUT its preflight reset (that would restyle every page). */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
