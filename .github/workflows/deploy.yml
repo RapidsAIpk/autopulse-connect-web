@@ -1,0 +1,69 @@
+name: CI / Deploy
+
+# Every push / PR: type-check, lint, build. Push to main: ship the standalone build to Contabo and reload it.
+# Secrets (repo → Settings → Secrets → Actions): CONTABO_HOST, CONTABO_USER, CONTABO_SSH_KEY.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      # Baked into the build: Next forwards /api etc. to the API on the same box. Live updates (Socket.io)
+      # go through nginx on the same origin, so no NEXT_PUBLIC_SOCKET_URL.
+      API_ORIGIN: http://127.0.0.1:4009
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn tsc --noEmit -p .
+      - run: yarn lint
+      - run: yarn build
+      - name: Package standalone release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          cp -r public .next/standalone/public
+          mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/static
+          cp -r deploy .next/standalone/deploy
+          tar -czf release.tgz -C .next/standalone .
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          name: web-release
+          path: release.tgz
+          retention-days: 7
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-release
+      - name: Ship to Contabo and reload
+        env:
+          HOST: ${{ secrets.CONTABO_HOST }}
+          USER: ${{ secrets.CONTABO_USER }}
+          KEY: ${{ secrets.CONTABO_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null ~/key && printf '%s\n' "$KEY" > ~/key
+          OPTS="-i $HOME/key -o StrictHostKeyChecking=accept-new"
+          RID="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          scp $OPTS release.tgz "$USER@$HOST:/tmp/web-$RID.tgz"
+          ssh $OPTS "$USER@$HOST" "mkdir -p /tmp/web-$RID && tar -xzf /tmp/web-$RID.tgz -C /tmp/web-$RID ./deploy/remote-deploy.sh && bash /tmp/web-$RID/deploy/remote-deploy.sh /tmp/web-$RID.tgz $RID; s=\$?; rm -rf /tmp/web-$RID; exit \$s"

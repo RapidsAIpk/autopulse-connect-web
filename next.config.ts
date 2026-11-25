@@ -29,6 +29,8 @@ const BACKEND_PATHS = [
 const nextConfig: NextConfig = {
   // The dev "N" badge sits on top of the rail's "Collapse menu" button.
   devIndicators: false,
+  // Self-contained server (.next/standalone) so the Contabo box only needs Node 22, no node_modules install.
+  output: "standalone",
   async rewrites() {
     return BACKEND_PATHS.map((source) => ({ source, destination: `${API}${source}` }));
   },
