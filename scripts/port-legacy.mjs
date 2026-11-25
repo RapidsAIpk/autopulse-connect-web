@@ -7,7 +7,7 @@
 //      import "./x.js?v=N"     → import "./x.js"       (bundler-friendly specifiers)
 //
 // Re-run after any change in the old app:  node scripts/port-legacy.mjs
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -43,7 +43,21 @@ for (const [name, file] of Object.entries(PAGES)) {
 const MODULES = [
   "app.js", "emoji.js", "profile.js", "stores.js", "team.js", "stock.js", "start.js", "popups.js",
   "visitors.js", "dashcharts.js", "charts.js", "leads.js", "account.js", "site.js", "widget-test.js",
+  "tz.js", "fbpage.js",
 ];
+
+// Everything else in assets/ (CSS, images, help.js, theme.js, and the scripts the backend's own pages load,
+// e.g. car-page.js, pages.js, fb-return.js) is served unchanged from public/assets.
+// login.js is not needed: the login screen is a React component (src/components/auth/LoginView.tsx).
+const PUBLIC_ASSETS = path.resolve(here, "../public/assets");
+mkdirSync(PUBLIC_ASSETS, { recursive: true });
+let copied = 0;
+for (const file of readdirSync(path.join(OLD, "assets"))) {
+  if (MODULES.includes(file) || file === "login.js") continue;
+  copyFileSync(path.join(OLD, "assets", file), path.join(PUBLIC_ASSETS, file));
+  copied++;
+}
+console.log(`static assets copied unchanged: ${copied}`);
 
 let swaps = 0;
 for (const file of MODULES) {

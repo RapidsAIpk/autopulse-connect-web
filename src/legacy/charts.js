@@ -24,8 +24,8 @@ function htmlEl(tag, attrs = {}, ...children) {
 }
 
 const fmtNum = (n) => Number(n || 0).toLocaleString();
-const shortDay = (d) => new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-const longDay = (d) => new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+const shortDay = (d) => new Date(`${d}T16:00:00Z`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const longDay = (d) => new Date(`${d}T16:00:00Z`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
 /** A round top for the y axis and 3–4 gridlines. */
 function niceMax(max) {

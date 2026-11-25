@@ -150,6 +150,11 @@ const HELP = {
     body: "Everyone who browses the dealer's website while visitor tracking is on: every visit, the pages they opened (car pages, search, specials, financing, trade-in, service) and the cars they looked at, with the time they spent. A visitor is Identified when they gave their own name, e-mail and phone in the chat (100% sure), Unverified when they looked up details in the chat but didn't confirm them (a hint only, never exported), and Anonymous otherwise. The same person on a phone and a computer is one visitor once they give the same e-mail or phone.",
     steps: ["Turn tracking on first: Website chat → Visitor tracking (off, on with a notice, or ask first). Nothing is recorded while it is off.", "The cards at the top count visitors by status, returning visitors and car shoppers; click one to filter the list.", "Most viewed cars: click a car to see who looked at it. What they look at: pages by type.", "Search by name, e-mail, phone, VIN, car or visitor ID; filter by status, last visit dates, 'Looked at cars' and 'Came back'.", "View (or click a row): who they are and how we know, every visit with its pages and time, cars viewed, devices, where they came from, their chat and leads.", "Export: the visitor list or every page, as Excel or CSV (owners, managers and admins). Contact details are exported only for identified visitors.", "Delete this visitor's data: for a privacy request. Their pages and identity are deleted; their chats stay in the Inbox."],
   },
+  "time-zone": {
+    title: "Time zone",
+    body: "How dates and times show for you everywhere in the inbox: messages, Today and Yesterday, leads, appointments, visitors, charts and the activity log. Each person chooses their own; it follows you to any computer.",
+    steps: ["New York time (default): the dealers' time zone, whatever your computer is set to.", "Automatic: your computer's own time zone, as before.", "Or pick a time zone from the list, then Save time zone. Times change as the lists refresh."],
+  },
   "visitor-tracking": {
     title: "Visitor tracking",
     body: "Records the pages and cars each visitor opens on your website, for the Visitors page. It never looks visitors up in outside databases: names come only from what visitors type into the chat.",
@@ -217,9 +222,9 @@ const HELP = {
   "messaging-permissions": {
     title: "Messaging permissions",
     body: "Features Meta and Twilio allow when their rules are followed. The server decides what may be turned on (account approvals); here you choose what is on. Rules that protect customers are always on and have no switch.",
-    steps: ["Always on: opt-outs (STOP) are honoured on every channel, free text only inside the 24-hour window, SMS broadcasts need consent and never go out from 8 PM to 8 AM store time.", "Templates after 24 hours and SMS broadcasts only go to customers with recorded consent (the green 'Consent ✓' tag in a chat).", "A grey switch means the server does not allow it yet: DevOps turns on the named setting once Meta or Twilio has approved the account."],
+    steps: ["Always on: opt-outs (STOP) are honoured on every channel, free text only inside the 24-hour window, SMS broadcasts need consent and never go out from 8 PM to 8 AM store time.", "Templates after 24 hours and SMS broadcasts only go to customers with recorded consent (the green 'Opted in ✓' tag in a chat).", "A grey switch means the server does not allow it yet: DevOps turns on the named setting once Meta or Twilio has approved the account."],
   },
-  consent: { title: "Consent", body: "Whether this customer agreed to get messages from the store. 'Consent ✓' is needed for templates after 24 hours, SMS broadcasts and new chats. 'Opted out' means they asked to stop: nothing can be sent until they reply START." },
+  consent: { title: "Consent", body: "Whether this customer agreed to get messages the store starts. 'Replies only': they haven't opted in, so you answer their messages while the reply window is open (the pill beside it shows how long is left). 'Opted in ✓': they agreed, so templates after 24 hours, SMS broadcasts and new chats are allowed too. 'Opted out': they asked to stop, so nothing can be sent until they reply START." },
   "global-settings": { title: "Global settings", body: "AutoPulse's name, support contacts, social links and logos, shown on the public pages." },
   "settings-site": { title: "AutoPulse site", body: "Global settings for AutoPulse itself: name, support e-mail and phone, social links and logos." },
 };
@@ -229,6 +234,7 @@ const PANEL_HELP = [
   ["#store-panel > h3", "store-details"],
   ["#popups-panel h3", "popups"],
   ["#tracking-panel > h3", "visitor-tracking"],
+  ["#timezone-panel > h3", "time-zone"],
   ["#stores-panel > h3", "my-stores"],
   ["#adf-panel > h3", "lead-emails"],
   ["#number-binding > h3", "number-binding"],

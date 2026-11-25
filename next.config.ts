@@ -16,6 +16,8 @@ const BACKEND_PATHS = [
   "/guide/:path*",
   "/sheet/:path*",
   "/webhook",
+  "/webhook/meta/:path*", // Rapids AI Meta app: Messenger webhooks (/webhook/meta/rapids, /webhook/meta/rapids-test)
+  "/meta/connect/callback", // Connect Facebook Page: Facebook sends the dealer back here
   "/twilio/:path*",
   "/verify-email",
   "/auth/google",

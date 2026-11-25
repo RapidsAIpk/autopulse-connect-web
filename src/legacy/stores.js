@@ -134,7 +134,11 @@ const CHANNEL_KEYS = ["whatsapp", "sms", "messenger", "instagram"];
 function controlBadges(s) {
   const { h } = ctx;
   const off = Object.keys(CONTROL_INFO).filter((k) => s.controls && s.controls[k] === false);
-  return off.length ? h("div", { class: "ctl-badges" }, ...off.map((k) => h("span", { class: "tag tag-warn", text: CONTROL_INFO[k][2] }))) : null;
+  const badges = [
+    ...(s.controls?.adfLive ? [h("span", { class: "tag known", text: "ADF live", "data-tip": "Lead e-mails go to the dealer's CRM" })] : []),
+    ...off.map((k) => h("span", { class: "tag tag-warn", text: CONTROL_INFO[k][2] })),
+  ];
+  return badges.length ? h("div", { class: "ctl-badges" }, ...badges) : null;
 }
 
 async function openControls(s) {
@@ -157,9 +161,30 @@ async function openControls(s) {
     return h("label", { class: "ctl-row" }, inputs[k], h("span", {}, h("strong", { text: label }), h("em", { text: help })));
   };
   const entries = Object.entries(CONTROL_INFO);
+  // Lead e-mails (ADF): off = test mode (AutoPulse's test inbox); on = the dealer's CRM gets real leads.
+  inputs.adfLive = h("input", { type: "checkbox", checked: data.controls.adfLive === true });
+  const adfTo = (data.adfEmails || []).join(", ");
+  const testBtn = h("button", { type: "button", class: "btn btn-sm", disabled: !adfTo }, "Send a test ADF lead");
+  testBtn.addEventListener("click", async () => {
+    testBtn.disabled = true;
+    try {
+      const r = await api(`/api/admin/stores/${encodeURIComponent(s.id)}/adf-test`, { method: "POST", body: {} });
+      toast(r.mode === "test" ? `Test ADF lead sent to the test inbox (instead of ${r.intended.join(", ")})` : `Test ADF lead sent to ${r.recipients.join(", ")}`, "success");
+    } catch (error) {
+      toast(error.message, "error");
+    } finally {
+      testBtn.disabled = false;
+    }
+  });
   const rows = [
     h("h4", { class: "ctl-head", text: "Store" }), ...entries.filter(([k]) => !CHANNEL_KEYS.includes(k)).map(row),
     h("h4", { class: "ctl-head", text: "Channels this dealership may use" }), h("div", { class: "ctl-grid" }, ...entries.filter(([k]) => CHANNEL_KEYS.includes(k)).map(row)),
+    h("h4", { class: "ctl-head", text: "Lead e-mails (ADF)" }),
+    h("label", { class: "ctl-row" }, inputs.adfLive, h("span", {}, h("strong", { text: "Send ADF leads to the dealer (live)" }),
+      h("em", { text: adfTo
+        ? `Off (test mode): new leads, appointments and car-sold alerts go to AutoPulse's test inbox, marked with the dealer's address. On: they go to ${adfTo}.`
+        : "No ADF address is set for this dealership yet (Settings → E-mails & alerts while viewing it). Until then nothing can be sent live." }))),
+    h("div", { class: "btn-row" }, testBtn, h("span", { class: "hint", text: "Uses the same test / live routing as real leads; the customer is named 'AutoPulse Test Lead - please delete'." })),
   ];
   const save = h("button", { type: "submit", class: "btn btn-primary" }, "Save controls");
   const form = h("form", { class: "stack", method: "dialog" },
@@ -171,7 +196,8 @@ async function openControls(s) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const body = Object.fromEntries(Object.keys(inputs).map((k) => [k, inputs[k].checked]));
-    const turningOff = Object.keys(body).filter((k) => !body[k] && data.controls[k] !== false);
+    const turningOff = Object.keys(body).filter((k) => k !== "adfLive" && !body[k] && data.controls[k] !== false);
+    if (body.adfLive && !data.controls.adfLive && !await confirmDialog({ title: `Send real leads to ${data.store.name}?`, text: `From now on, new leads, appointments and car-sold alerts for this dealership are e-mailed to ${adfTo || "its ADF address"}. Other dealers stay in test mode.`, okLabel: "Switch ADF live" })) return;
     if (turningOff.length && !await confirmDialog({ title: `Switch off for ${data.store.name}?`, text: turningOff.map((k) => `${CONTROL_INFO[k][0]}: ${CONTROL_INFO[k][1]}`).join("\n\n"), okLabel: "Switch off" })) return;
     save.disabled = true;
     try {
@@ -202,20 +228,24 @@ async function openStore(s, target) {
   tab.location.href = `/#open-store=${encodeURIComponent(s.id)}&view=${encodeURIComponent(target)}`;
 }
 
-async function loginAs(s) {
-  const { toast, confirmDialog } = ctx;
-  const tab = window.open("about:blank", "_blank");
-  if (!tab) {
-    toast("Allow pop-ups to open the dealer account in a new page.", "error");
-    return;
-  }
-  tab.opener = null;
-  const ok = await confirmDialog({ title: `Log in as ${s.name}?`, text: "You will see the inbox exactly as this dealer does. It is recorded in the audit log. Use 'Back to admin' at the top to return.", okLabel: "Log in as dealer" });
-  if (!ok) {
-    tab.close();
-    return;
-  }
-  tab.location.href = `/#login-as=${encodeURIComponent(s.id)}`;
+/**
+ * "Log in as dealer": a short confirmation whose button is a link to the dealer's inbox in a new tab. A link you
+ * click always opens (no pop-up blocker, no blank tab waiting while you confirm); that tab signs in as the dealer.
+ */
+function loginAs(s) {
+  const { h } = ctx;
+  const url = `/#login-as=${encodeURIComponent(s.id)}`;
+  const dialog = h("dialog", { class: "dialog" });
+  const go = h("a", { href: url, target: "_blank", rel: "noopener", class: "btn btn-primary", text: "Log in as dealer" });
+  go.addEventListener("click", () => setTimeout(() => dialog.close(), 0));
+  dialog.append(h("form", { method: "dialog", class: "stack" },
+    h("h3", { text: `Log in as ${s.name}?` }),
+    h("p", { class: "muted", text: "The dealer's inbox opens in a new tab, exactly as they see it. It is recorded in the audit log. Use 'Back to admin' at the top of that tab to return." }),
+    h("div", { class: "dialog-actions" }, h("button", { class: "btn", value: "cancel", text: "Cancel" }), go)));
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.append(dialog);
+  dialog.showModal();
+  go.focus();
 }
 
 async function changePassword(s) {

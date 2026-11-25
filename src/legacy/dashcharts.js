@@ -43,7 +43,7 @@ async function load() {
   }
   if (mine !== seq) return;
   grid.classList.remove("loading");
-  $("dash-range-note").textContent = `${new Date(`${d.from}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${new Date(`${d.to}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
+  $("dash-range-note").textContent = `${new Date(`${d.from}T16:00:00Z`).toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${new Date(`${d.to}T16:00:00Z`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
   // Charts in groups (Conversations, Leads and bookings, Website and car pages, By store), each a 6-column grid:
   // a trend takes 4 columns with its breakdown (2) beside it, so every row is full.
   const groups = [];

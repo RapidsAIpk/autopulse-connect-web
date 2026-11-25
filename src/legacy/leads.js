@@ -102,6 +102,7 @@ function iconButton(label, path, onclick, extra = "") {
 const EYE = "M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z";
 const CHAT = "M4 5h16v10h-9l-5 4v-4H4z";
 const BIN = "M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13";
+const ERASE_PERSON = "M9.5 8.5a3 3 0 1 0 0-.01M3.5 19.5c.6-3.3 3-5.2 6-5.2 1.6 0 3 .5 4.1 1.4M16 10l5 5M21 10l-5 5";
 
 async function openChat(phone) {
   if (!phone) return;
@@ -335,6 +336,7 @@ function paintLeads(t, data) {
       iconButton("View lead", EYE, () => viewLead(lead.id)),
       lead.chatKey ? iconButton("Open chat", CHAT, () => openChat(lead.chatKey)) : null,
       t.admin ? iconButton("Delete lead", BIN, () => confirmDelete("lead", `/api/leads/${lead.id}`, t), "danger") : null,
+      lead.chatKey && ui.isSuperAdmin?.() ? iconButton("Delete all of this customer's data", ERASE_PERSON, async () => { if (await ui.eraseCustomer(lead.chatKey)) reload(t); }, "danger erase") : null,
     ),
   )) : [emptyRow(columns.length, "No leads yet. Leads appear when a customer taps “I'm Interested” on a car, or when you save one from a chat.")]));
   $("leads-count").textContent = countText(t, data.total, data.items.length);
@@ -842,7 +844,14 @@ async function loadAdf() {
   const { $ } = ui;
   if ($("adf-panel").hidden) return;
   try {
-    const { emails, alertEmails } = await ui.api("/api/dealership/adf");
+    const { emails, alertEmails, mode } = await ui.api("/api/dealership/adf");
+    // Test mode until AutoPulse switches this dealer live (Stores → Store controls → ADF leads live).
+    const note = $("adf-mode");
+    note.hidden = false;
+    note.classList.toggle("warn", mode !== "live");
+    note.textContent = mode === "live"
+      ? "Live: new leads and appointments are e-mailed to the address below."
+      : "Test mode: leads are e-mailed to AutoPulse's test inbox, not to this address yet. AutoPulse switches them live when your CRM is ready.";
     $("adf-form").elements.emails.value = (emails || []).join(", ");
     $("adf-form").elements.alertEmails.value = (alertEmails || []).join(", ");
   } catch {

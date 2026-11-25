@@ -1,6 +1,8 @@
 // PORTED by scripts/port-legacy.mjs from autopulse-connect-hub/public/assets/app.js — edit the port script, not this file.
 import { legacyFetch } from "@/lib/legacyFetch";
 import { openLiveEvents } from "@/lib/liveEvents";
+// Dates and times in the person's chosen time zone (New York by default). First, before anything formats a date.
+import { BROWSER_TIME_ZONE, TIME_ZONE_CHOICES, currentTimeZone, setAppTimeZone } from "./tz.js";
 import { EMOJI_CATS, emojiKeywords, searchEmojis } from "./emoji.js";
 import { initAccount, loadAccountPanel, loadEnquiries, loadStorePanel, loadWidgetPanel, paintMeAvatar } from "./profile.js";
 import { initStores, loadMessaging, loadOutbound, loadSite, loadStores, showImpersonation } from "./stores.js";
@@ -10,6 +12,7 @@ import { initStart, loadStart } from "./start.js";
 import { initPopups, loadPopups } from "./popups.js";
 import { initVisitors, loadTrackingPanel, loadVisitorsView } from "./visitors.js";
 import { initDashCharts } from "./dashcharts.js";
+import { initFacebookPage, loadFacebookPage } from "./fbpage.js";
 import { clearLeadsBadge, initLeads, loadAdfSetting, loadAppointmentsView, loadConversationsView, loadDashboardView, loadLeadsView, loadVehiclesView, onRecordEvent, syncChatActions } from "./leads.js";
 
 const $ = (id) => document.getElementById(id);
@@ -486,6 +489,7 @@ function showView(view) {
     loadMessaging();
     loadSettings();
     loadAdfSetting();
+    loadFacebookPage().then(() => paintSettingsTabs());
   }
   if (view === "leads") {
     clearLeadsBadge();
@@ -567,6 +571,46 @@ const MAX_ATTACH_BYTES = 16 * 1024 * 1024;
 function accountKind() {
   return state.me?.crmAccount || (state.me?.role === "admin" ? "superadmin" : "staff");
 }
+
+/** AutoPulse super admin: preview what belongs to this customer, ask for DELETE, then delete it all. true if deleted. */
+async function eraseCustomerFlow(phone) {
+  let preview;
+  try {
+    preview = await api(`/api/admin/customers/${encodeURIComponent(phone)}/erase`);
+  } catch (error) {
+    toast(error.message, "error");
+    return false;
+  }
+  const n = preview.counts;
+  const plural = (k, one, many = `${one}s`) => `${k} ${k === 1 ? one : many}`;
+  const who = [preview.name, ...preview.emails, ...preview.phones.map((p) => `phone ${p}`)].filter(Boolean).join(", ");
+  const typed = await confirmDialog({
+    title: "Delete all of this customer's data?",
+    text: `${who ? `${who}. ` : ""}This permanently deletes, in this store: ${plural(n.chats, "chat")} with ${plural(n.messages, "message")} and their files, ${plural(n.calls, "call")}, ${plural(n.leads, "lead")}, ${plural(n.appointments, "visit booking")}, ${plural(n.visitorBrowsers, "website visitor record")} with ${plural(n.pageViews, "page view")}, the profile and photo, and the AI's memory of the conversation. It cannot be undone. Records in the AutoPulse CRM are not changed. Type DELETE to confirm.`,
+    okLabel: "Delete everything",
+    input: true,
+    inputType: "text",
+    placeholder: "DELETE",
+  });
+  if (typed === null) return false;
+  if (String(typed).trim() !== "DELETE") { toast("Not deleted: type DELETE to confirm.", "info"); return false; }
+  try {
+    const { erased } = await api(`/api/admin/customers/${encodeURIComponent(phone)}/erase`, { method: "POST", body: { confirm: "DELETE" } });
+    if (state.active) {
+      state.active = null;
+      $("thread").hidden = true;
+      $("thread-empty").hidden = false;
+      document.querySelector(".inbox")?.classList.remove("has-thread");
+    }
+    await loadContacts().catch(() => renderContacts());
+    toast(`Deleted: ${plural(erased.chats, "chat")}, ${plural(erased.leads, "lead")}, ${plural(erased.appointments, "booking")}`, "success");
+    return true;
+  } catch (error) {
+    toast(error.message, "error");
+    return false;
+  }
+}
+const isSuperAdmin = () => accountKind() === "superadmin" && !state.impersonatedBy;
 
 function syncDealershipChrome() {
   const select = $("dealership-switch");
@@ -1160,8 +1204,10 @@ function renderThreadHeader() {
     pill.textContent = "SMS · always open";
     pill.className = "pill open";
   } else {
-    pill.textContent = c.windowOpen ? "24h window open" : "Window closed";
-    pill.className = `pill ${c.windowOpen ? "open" : "closed"}`;
+    const w = replyWindow(c);
+    pill.textContent = w.label;
+    pill.title = w.hint;
+    pill.className = `pill ${w.cls}`;
   }
   $("bot-toggle").checked = c.botEnabled;
   $("bot-label").textContent = c.botEnabled ? "AI replying" : "Human handling";
@@ -1192,6 +1238,7 @@ function renderThreadHeader() {
     $("invite-btn").textContent = c.isBroadcast || String(c.phone).startsWith("tg:") ? "Add person" : "Invite";
   }
   if ($("delete-list-btn")) $("delete-list-btn").hidden = !c.isBroadcast;
+  if ($("erase-customer-btn")) $("erase-customer-btn").hidden = !isSuperAdmin() || c.isGroup || c.isBroadcast;
   if ($("delete-room-btn")) {
     $("delete-room-btn").hidden = !isTwilioRoom(c) && !isMetaGroup(c);
     $("delete-room-btn").textContent = isMetaGroup(c) ? "Delete group" : "Delete room";
@@ -1285,6 +1332,39 @@ function renderThreadHeader() {
   syncComposerSend();
 }
 
+// ---------- reply window (WhatsApp, Messenger, Instagram) ----------
+const DAY_MS = 24 * 60 * 60 * 1000;
+function timeLeft(ms) {
+  const min = Math.max(1, Math.round(ms / 60000));
+  if (min < 60) return `${min} min`;
+  const hours = Math.round(min / 60);
+  return hours < 48 ? `${hours}h` : `${Math.round(hours / 24)} days`;
+}
+const at = (ms) => new Date(ms).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
+
+/** What the team can do now: reply freely (24 h after the customer's last message), staff only (Messenger/Instagram
+ *  Human Agent, up to 7 days, when switched on), or nothing until the customer writes again. */
+function replyWindow(c) {
+  const last = Number(c.lastInboundAt) || 0;
+  if (c.windowOpen) {
+    const ends = last ? last + DAY_MS : 0;
+    return {
+      label: ends ? `Can reply · ${timeLeft(ends - Date.now())} left` : "Can reply",
+      hint: ends ? `The customer messaged last on ${at(last)}. You and the AI can reply until ${at(ends)}.` : "You and the AI can reply.",
+      cls: "open",
+    };
+  }
+  if (c.humanAgentWindowOpen && state.messaging?.humanAgentReplies) {
+    const ends = last + 7 * DAY_MS;
+    return { label: `Staff reply only · ${timeLeft(ends - Date.now())} left`, hint: `Over 24 hours since their last message: only a team member can reply (Meta's Human Agent rule), until ${at(ends)}. The AI stays quiet.`, cls: "closed" };
+  }
+  return {
+    label: "Reply window closed",
+    hint: "Over 24 hours since the customer's last message. You can reply again as soon as they write" + (channelOf(c) === "twilio" ? ", or send an approved template." : "."),
+    cls: "closed",
+  };
+}
+
 // ---------- consent (proof of opt-in, opt-outs) ----------
 const CONSENT_CHANNELS = new Set(["whatsapp", "twilio", "sms", "messenger", "instagram"]);
 const CONSENT_SOURCE = { staff: "recorded by the team", staff_restore: "restored by an admin", keyword: "they replied START" };
@@ -1301,13 +1381,13 @@ function renderConsent(c) {
     tag.className = "tag consent-out";
     tag.title = consent.optedOutAt ? `Asked to stop on ${new Date(consent.optedOutAt).toLocaleString()}` : "Asked to stop messages";
   } else if (consent.optedIn) {
-    tag.textContent = "Consent ✓";
+    tag.textContent = "Opted in ✓";
     tag.className = "tag consent-yes";
-    tag.title = `Agreed to get messages on ${new Date(consent.optedInAt).toLocaleString()} (${CONSENT_SOURCE[consent.source] || consent.source})`;
+    tag.title = `Agreed to get messages from the store on ${new Date(consent.optedInAt).toLocaleString()} (${CONSENT_SOURCE[consent.source] || consent.source}). You may also message them first: follow-ups, templates, broadcasts.`;
   } else {
-    tag.textContent = "No consent";
+    tag.textContent = "Replies only";
     tag.className = "tag consent-no";
-    tag.title = "No recorded agreement. Needed for templates after 24 hours, SMS broadcasts and new chats.";
+    tag.title = "Not opted in to messages you start (follow-ups after the reply window, templates, broadcasts, new chats). Replying to their messages is fine. Click to record their agreement if they gave it.";
   }
 }
 
@@ -3020,6 +3100,8 @@ function wire() {
       toast(error.message, "error");
     }
   });
+  // AutoPulse super admin: delete everything about this customer (chats, profile, leads, visits, website visits).
+  $("erase-customer-btn")?.addEventListener("click", () => { if (state.active) eraseCustomerFlow(state.active.phone); });
   $("delete-list-btn")?.addEventListener("click", async () => {
     if (!state.active?.isBroadcast) return;
     const ok = await confirmDialog({
@@ -3109,6 +3191,13 @@ function wire() {
   });
 
   $("logout-btn").addEventListener("click", async () => {
+    const asDealer = Boolean(state.impersonatedBy);
+    const ok = await confirmDialog({
+      title: "Sign out?",
+      text: asDealer ? "This signs out of this dealer view. To go back to your admin view instead, use 'Back to admin' at the top." : "You will need your e-mail and password to sign in again.",
+      okLabel: "Sign out",
+    });
+    if (!ok) return;
     try { await api("/api/auth/logout", { method: "POST" }); } catch {}
     state.sessionToken = "";
     try { sessionStorage.removeItem("autopulse.sessionToken"); } catch {}
@@ -3237,11 +3326,41 @@ function forcePasswordChange() {
   });
 }
 
+// ---------- Settings → My account → Time zone ----------
+function initTimeZonePanel(me) {
+  const select = $("timezone-select");
+  if (!select) return;
+  const known = TIME_ZONE_CHOICES.some(([z]) => z === me.user?.timeZone);
+  select.replaceChildren(
+    h("option", { value: "", text: "New York time (default)" }),
+    h("option", { value: "auto", text: `Automatic: this computer's time zone (${BROWSER_TIME_ZONE})` }),
+    ...TIME_ZONE_CHOICES.filter(([z]) => z !== "America/New_York").map(([z, label]) => h("option", { value: z, text: label })),
+    ...(me.user?.timeZone && me.user.timeZone !== "auto" && !known ? [h("option", { value: me.user.timeZone, text: me.user.timeZone })] : []),
+  );
+  select.value = me.user?.timeZone || "";
+  const paintNow = () => { $("timezone-now").textContent = `Now: ${new Date().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} (${currentTimeZone()})`; };
+  paintNow();
+  $("timezone-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api("/api/account/time-zone", { method: "POST", body: { timeZone: select.value } });
+      setAppTimeZone(res.timeZone);
+      state.me = { ...state.me, timeZone: res.timeZone };
+      paintNow();
+      toast("Time zone saved. Lists show the new times as they refresh.", "success");
+      if (state.view === "inbox") renderContacts?.();
+    } catch (error) {
+      toast(error.message, "error");
+    }
+  });
+}
+
 async function init() {
   try { state.sessionToken = sessionStorage.getItem("autopulse.sessionToken") || ""; } catch {}
   const loginAsMatch = /^#login-as=(.+)$/.exec(location.hash);
   const openStoreMatch = /^#open-store=([^&]+)&view=([a-z-]+)$/.exec(location.hash);
   const me = await api("/api/me");
+  setAppTimeZone(me.user?.timeZone || ""); // Settings → My account → Time zone
   // Store controls: AutoPulse paused this dealership's sign-in. Show why, with Sign out, instead of the inbox.
   if (me.paused) {
     document.body.append(h("div", { class: "paused-screen" }, h("div", { class: "paused-card" },
@@ -3262,6 +3381,8 @@ async function init() {
   state.roomsSupported = Boolean(state.metaGroupsSupported || (caps.platforms?.twilio?.groups && state.broadcast));
   syncChannelControls();
   state.me = me.user;
+  state.impersonatedBy = me.impersonatedBy || null; // "Log in as dealer" tab (Sign out explains Back to admin)
+  initTimeZonePanel(me);
   state.store = me.store || { inboxOnly: false, hasTeam: false }; // which screens apply to the store being viewed
   state.csrf = me.csrfToken;
   // Signed in with a temporary password from an admin: choose your own before anything else.
@@ -3316,10 +3437,11 @@ async function init() {
   initStart({ $, h, api, toast, state, showView });
   initPopups({ $, h, api, toast, confirmDialog });
   initVisitors({ $, h, api, toast, confirmDialog, showView, openContact });
+  initFacebookPage({ $, h, api, toast, confirmDialog });
   initDashCharts({ $, h, api, toast, showView });
   showImpersonation(me);
   paintMeAvatar(me.user.photoUrl);
-  initLeads({ $, h, api, toast, confirmDialog, openContact, showView, state });
+  initLeads({ $, h, api, toast, confirmDialog, openContact, showView, state, eraseCustomer: eraseCustomerFlow, isSuperAdmin });
   const owner = ["owner", "member"].includes(accountKind()); // inbox-only dealership accounts
   const wantedView = /^#view=([a-z]+)(?:-([a-z]+))?$/.exec(location.hash);
   if (wantedView && VIEW_META[wantedView[1]]) {
