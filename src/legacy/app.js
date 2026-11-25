@@ -638,7 +638,8 @@ function fillNumberBinding(dealerships = []) {
   const select = $("number-dealership");
   if (!select) return;
   const bound = dealerships.find((dealer) => dealer.isDefault) || state.dealership;
-  select.replaceChildren(...dealerships.map((dealer) => h("option", {
+  // CRM dealers and inbox-only dealerships; never a test dealership (real customers' messages).
+  select.replaceChildren(...dealerships.filter((dealer) => !dealer.isTest).map((dealer) => h("option", {
     value: String(dealer.id),
     text: dealer.dealershipName,
     selected: bound && String(dealer.id) === String(bound.id),

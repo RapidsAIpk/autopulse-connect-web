@@ -1694,3 +1694,4 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .fbpage-utility { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
 .fbpage-utility h4 { margin: 0; font-size: 14px; }
 .fbpage-utility .muted { margin: 0; }
+.fbpage-icon.ig-icon { background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); font-size: 12px; }

@@ -262,7 +262,7 @@ async function changePassword(s) {
 
 async function deleteStore(s) {
   const { api, toast, confirmDialog } = ctx;
-  const ok = await confirmDialog({ title: `Delete ${s.name}?`, text: "The store is removed. Its leads stay for the record. A dealer account with no store left is turned off.", okLabel: "Delete store" });
+  const ok = await confirmDialog({ title: `Delete ${s.name}?`, text: "The store is removed: its website chat stops, its Facebook Page is disconnected, and a dealer account with no store left is turned off with its team. Its chats and leads stay, for the record (a super admin can delete a customer's data from the chat).", okLabel: "Delete store" });
   if (!ok) return;
   try {
     await api(`/api/admin/stores/${encodeURIComponent(s.id)}`, { method: "DELETE" });

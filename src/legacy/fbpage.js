@@ -7,6 +7,7 @@ let ctx = null;
 const back = new URLSearchParams(location.search);
 let pick = back.get("fbpick") || "";
 let returnError = back.get("fberror") || "";
+let instagramOk = back.get("igok") || "";
 
 const dateOf = (ms) => (ms ? new Date(Number(ms)).toLocaleDateString(undefined, { dateStyle: "medium" }) : "");
 
@@ -37,10 +38,12 @@ export async function loadFacebookPage() {
     return;
   }
   // Shown to people who can connect, and to everyone once a Page is connected (so they know where chats come from).
+  renderInstagram(data);
   panel.hidden = !(data.canEdit && data.ready) && !data.page;
-  if (panel.hidden) return;
-  // Back from Facebook: open this tab (the panel only becomes visible now, after the page has loaded).
-  if (pick || returnError) setTimeout(() => document.querySelector('#settings-tabs [data-stab="channels"]')?.click(), 0);
+  // Back from Facebook or Instagram: open this tab (the panels only become visible now, after the page has loaded).
+  if (pick || returnError || instagramOk) setTimeout(() => document.querySelector('#settings-tabs [data-stab="channels"]')?.click(), 0);
+  if (instagramOk) { ctx.toast(`Instagram ${instagramOk} is connected`, "success"); instagramOk = ""; }
+  if (panel.hidden) { if (returnError) { ctx.toast(returnError, "error"); returnError = ""; } return; }
   showError(returnError);
   returnError = "";
   note(data.messengerOn ? "" : "Messenger is switched off for this store by AutoPulse. The Page can be connected, but no replies go out until it is switched on.");
@@ -198,6 +201,69 @@ async function disconnect(page) {
   try {
     await ctx.api("/api/facebook-page/disconnect", { method: "POST", body: {} });
     ctx.toast("The Facebook Page is disconnected", "success");
+    await loadFacebookPage();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+// ---------- Instagram ----------
+// Two ways: the Instagram account linked to the connected Facebook Page comes with it; or "Connect Instagram"
+// (Instagram Login) for an account that is not linked to a Page.
+function renderInstagram(data) {
+  const { h, $ } = ctx;
+  const panel = $("instagram-panel");
+  const body = $("instagram-body");
+  if (!panel || !body) return;
+  panel.hidden = !(data.canEdit && (data.ready || data.instagramLogin)) && !data.instagram;
+  if (panel.hidden) return;
+  body.replaceChildren();
+  if (!data.instagramOn) body.append(h("p", { class: "callout", text: "Instagram is switched off for this store by AutoPulse. The account can be connected, but no replies go out until it is switched on." }));
+  const ig = data.instagram;
+  if (ig) {
+    const via = ig.via === "page" ? "linked to your Facebook Page" : ig.via === "unified" ? "connected with Instagram (business login)" : `connected with Instagram${ig.expiresAt ? ` · renews automatically` : ""}`;
+    body.append(h("div", { class: "fbpage-card" },
+      h("div", { class: "fbpage-icon ig-icon", "aria-hidden": "true" }, "IG"),
+      h("div", { class: "fbpage-main" },
+        h("strong", { text: ig.username ? `@${ig.username}` : `Instagram ${ig.id}` }),
+        h("span", { class: "muted", text: `${via}${ig.connectedAt ? ` · connected ${dateOf(ig.connectedAt)}` : ""}` })),
+      h("span", { class: ig.working ? "vis-tag ok" : "vis-tag warn", text: ig.working ? "Connected" : "Needs reconnecting" })));
+    if (data.canEdit && ig.via !== "page") {
+      body.append(h("div", { class: "row" }, h("button", { class: "btn btn-danger", type: "button", onclick: () => disconnectInstagram(ig) }, "Disconnect Instagram")));
+    }
+    return;
+  }
+  body.append(h("p", { class: "muted", text: data.page
+    ? "No Instagram account is linked to your Facebook Page. Link it in Meta Business Suite and connect the Page again, or connect your Instagram account here."
+    : "Connect your Facebook Page above (its linked Instagram account comes with it), or connect your Instagram account here." }));
+  if (data.canEdit && data.instagramLogin) {
+    body.append(h("div", { class: "row" }, h("button", { class: "btn btn-primary", type: "button", id: "instagram-connect", onclick: connectInstagram }, "Connect Instagram")));
+  }
+}
+
+async function connectInstagram() {
+  showError("");
+  const btn = ctx.$("instagram-connect");
+  if (btn) btn.disabled = true;
+  try {
+    const { url } = await ctx.api("/api/instagram/connect", { method: "POST", body: {} });
+    window.location.assign(url);
+  } catch (error) {
+    showError(error.message);
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function disconnectInstagram(ig) {
+  const ok = await ctx.confirmDialog({
+    title: "Disconnect this Instagram account?",
+    text: `New Instagram messages to @${ig.username || ig.id} will stop arriving here, and replies to its chats will stop. Existing chats stay in the inbox.`,
+    okLabel: "Disconnect",
+  });
+  if (!ok) return;
+  try {
+    await ctx.api("/api/instagram/disconnect", { method: "POST", body: {} });
+    ctx.toast("Instagram is disconnected", "success");
     await loadFacebookPage();
   } catch (error) {
     showError(error.message);
