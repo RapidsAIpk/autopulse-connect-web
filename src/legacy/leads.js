@@ -705,6 +705,8 @@ async function openStockCar(vin) {
 // ---------- dealer dashboard ----------
 
 let dashStore = "";
+// The Dashboard's own Store picker follows "Viewing": switching the viewed store resets it.
+document.addEventListener("dealership:switched", () => { dashStore = ""; });
 
 async function loadDashboard() {
   const { h, $ } = ui;

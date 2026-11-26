@@ -239,7 +239,12 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 15
 
 /* ---------- app layout ---------- */
 .app-page { overflow: hidden; overscroll-behavior: none; }
-.app { height: 100%; height: 100dvh; min-height: 0; overflow: hidden; display: grid; grid-template-columns: 64px minmax(0, 1fr); }
+.app { height: 100%; height: 100dvh; min-height: 0; overflow: hidden; display: grid; grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+/* The page row is exactly the window height: a tall side menu scrolls on its own instead of stretching the row
+   (which pushed the bottom of every page below the window on shorter screens, e.g. a 1080p laptop). */
+@media (min-width: 861px) {
+  .rail { min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+}
 
 .rail {
   display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0 12px;
