@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How AutoPulse Connect works</title>
+  <meta name="description" content="What AutoPulse Connect does, how a website chat becomes a lead and a booked visit, every screen and who uses it." />
+  <link rel="icon" href="/assets/logo.svg" />
+  <link rel="stylesheet" href="/assets/overview.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <a class="back" href="/">← Back to the app</a>
+      <p class="eyebrow">App overview</p>
+      <h1>How AutoPulse Connect works</h1>
+      <p class="lead">An AI chat on the dealer's website that answers visitors from the dealer's own stock, hands the conversation to the team when needed, and turns it into a lead and a booked showroom visit. Everything lands in one inbox.</p>
+      <nav class="jump" aria-label="On this page">
+        <a href="#flow">The flow</a><a href="#start">Getting started</a><a href="#screens">Every screen</a><a href="#roles">Who can do what</a><a href="#channels">Channels</a><a href="#testing">For testers</a><a href="#words">Words we use</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ================= THE FLOW ================= -->
+    <section id="flow" class="block">
+      <h2><span class="num">1</span> The flow: from website visitor to booked visit</h2>
+      <p class="intro">One visitor, start to finish. Each step shows where it appears in the app.</p>
+
+      <figure class="flow" aria-label="Flow diagram">
+        <svg viewBox="0 0 1080 300" role="img" aria-labelledby="flow-title">
+          <title id="flow-title">Visitor opens the chat, the AI answers, the team can take over, a lead and a visit are saved and sent to the dealer.</title>
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="arrow-head" /></marker>
+          </defs>
+          <g class="lane"><rect x="10" y="20" width="1060" height="118" rx="14" /><text x="26" y="44" class="lane-t">On the dealer's website</text></g>
+          <g class="lane alt"><rect x="10" y="160" width="1060" height="128" rx="14" /><text x="26" y="184" class="lane-t">In AutoPulse Connect (the team)</text></g>
+
+          <g class="node n1"><rect x="40" y="58" width="190" height="66" rx="10" /><text x="135" y="84">Visitor opens</text><text x="135" y="104">the chat bubble</text></g>
+          <g class="node n2"><rect x="280" y="58" width="190" height="66" rx="10" /><text x="375" y="84">Picks a department,</text><text x="375" y="104">gives name &amp; contact</text></g>
+          <g class="node n3"><rect x="520" y="58" width="190" height="66" rx="10" /><text x="615" y="84">AI answers with</text><text x="615" y="104">cars from the stock</text></g>
+          <g class="node n4"><rect x="760" y="58" width="270" height="66" rx="10" /><text x="895" y="84">Visitor leaves details or</text><text x="895" y="104">books a showroom visit</text></g>
+
+          <g class="node m1"><rect x="40" y="200" width="190" height="66" rx="10" /><text x="135" y="226">Chat appears live</text><text x="135" y="246">in the Inbox</text></g>
+          <g class="node m2"><rect x="280" y="200" width="190" height="66" rx="10" /><text x="375" y="226">Team takes over</text><text x="375" y="246">(AI pauses) and replies</text></g>
+          <g class="node m3"><rect x="520" y="200" width="190" height="66" rx="10" /><text x="615" y="226">Lead &amp; visit saved:</text><text x="615" y="246">Leads, Appointments</text></g>
+          <g class="node m4"><rect x="760" y="200" width="270" height="66" rx="10" /><text x="895" y="226">Lead e-mailed to the dealer's</text><text x="895" y="246">CRM (ADF) · team alerted</text></g>
+
+          <path class="link" d="M230 91h46" marker-end="url(#arr)" />
+          <path class="link" d="M470 91h46" marker-end="url(#arr)" />
+          <path class="link" d="M710 91h46" marker-end="url(#arr)" />
+          <path class="link dash" d="M135 124v72" marker-end="url(#arr)" />
+          <path class="link" d="M230 233h46" marker-end="url(#arr)" />
+          <path class="link dash" d="M375 196v-68" marker-end="url(#arr)" />
+          <path class="link" d="M895 124c0 40-280 30-280 72" marker-end="url(#arr)" />
+          <path class="link" d="M710 233h46" marker-end="url(#arr)" />
+        </svg>
+        <figcaption>Dashed arrows run both ways in real time: the team sees the visitor's messages as they type, and the visitor sees the team's replies in the same chat window.</figcaption>
+      </figure>
+
+      <ol class="steps">
+        <li><b>The chat bubble</b> sits on the dealer's website (one line of embed code from <i>Website chat</i>). Pop-up messages next to it invite visitors to ask.</li>
+        <li><b>The visitor picks a department</b> (Sales, Service, Finance…) and gives their name, e-mail and phone. A returning visitor continues their earlier chat.</li>
+        <li><b>The AI answers</b> using the store's own stock, address, hours and links (<i>Store → What the AI knows</i>), and sends car cards with photo, price and a link to the car's page.</li>
+        <li><b>The chat shows up live in the Inbox.</b> Anyone on the team can open it, switch the AI off for that chat and reply. The visitor sees the reply in the same window.</li>
+        <li><b>A lead is saved</b> when the visitor fills the lead form, or the team clicks <i>Save lead</i>. <b>A visit is booked</b> from the chat or by the visitor. They appear under <i>Leads</i> and <i>Appointments</i>.</li>
+        <li><b>The dealer is told:</b> each lead and appointment is e-mailed to the dealer's CRM in ADF format, and the team gets alerts (chat waiting, person asked for, new lead).</li>
+        <li><b>Everything is counted</b>: <i>Dashboard</i>, <i>Conversations</i>, <i>Visitors</i> (pages and cars each visitor viewed) and <i>Vehicles</i> (leads, chats, views and taps per car).</li>
+      </ol>
+    </section>
+
+    <!-- ================= GETTING STARTED ================= -->
+    <section id="start" class="block">
+      <h2><span class="num">2</span> Getting started (a new dealership)</h2>
+      <p class="intro">The Dashboard's <i>Get started</i> list follows the same order and ticks each step off.</p>
+      <div class="timeline">
+        <div class="t-item"><span class="dot">1</span><div><h3>Store details</h3><p><i>Store</i>: address (Find on map), phones, contact person, manager alerts, and under <i>What the AI knows</i> the inventory, credit-application and trade-in links.</p></div></div>
+        <div class="t-item"><span class="dot">2</span><div><h3>Website chat</h3><p><i>Website chat</i>: bot name, colours, welcome text, opening hours, pop-up messages. <b>Copy the embed code</b> to the website, then <b>Open test page</b> to try it like a customer.</p></div></div>
+        <div class="t-item"><span class="dot">3</span><div><h3>Cars</h3><p><i>Vehicles</i>: stores in the AutoPulse feed get their stock automatically. Others use <i>My own inventory</i>: add cars (VIN fills the details), photos, CSV import.</p></div></div>
+        <div class="t-item"><span class="dot">4</span><div><h3>Team</h3><p><i>Team</i>: add agents and managers with their departments; choose how new website chats are shared out (next person online, or the department queue).</p></div></div>
+        <div class="t-item"><span class="dot">5</span><div><h3>E-mails</h3><p><i>Settings → E-mails &amp; alerts</i>: who gets team alerts and where ADF lead e-mails go (the dealer's CRM).</p></div></div>
+        <div class="t-item"><span class="dot">6</span><div><h3>Pages to share</h3><p><i>Pages</i>: a dealership page and one per person, with a QR code. Chats that start from a person's page go straight to them.</p></div></div>
+      </div>
+    </section>
+
+    <!-- ================= SCREENS ================= -->
+    <section id="screens" class="block">
+      <h2><span class="num">3</span> Every screen and what it is for</h2>
+      <p class="intro">Grouped the way you use them. Each screen has <b>Help</b> (top of the menu) with a short tour.</p>
+
+      <h3 class="grp">Daily work</h3>
+      <div class="grid">
+        <article class="card c-sky"><h4>Dashboard</h4><p>The store at a glance: cars, car-page views, leads, appointments, chats; <i>Get started</i>; trends over 7/30/90 days.</p></article>
+        <article class="card c-sky"><h4>Inbox</h4><p>Every conversation, newest first. Filter by status (Unread, Unreplied, Human, Queue…). Open a chat to reply, switch the AI off, flag, <b>Save lead</b>, <b>Book visit</b>, send cars from the inventory, attach files or a voice note.</p></article>
+        <article class="card c-green"><h4>Leads</h4><p>Customers interested in a car, by customer or by car, with filters, details, open chat, delete and CSV export.</p></article>
+        <article class="card c-teal"><h4>Appointments</h4><p>Showroom visits booked from chats and the website, with counts, filters and CSV exports.</p></article>
+        <article class="card c-orange"><h4>Vehicles</h4><p>The stock with search filters and, per car, leads, chat mentions, page views and taps. Copy a car's public link.</p></article>
+        <article class="card c-violet"><h4>Conversations</h4><p>A log of every chat: first question, messages, session time, clicks, bookings. Export as CSV or transcripts.</p></article>
+        <article class="card c-rose"><h4>Visitors</h4><p>Who browsed the website (when tracking is on): identified, unverified or anonymous; pages and cars each one viewed; who came back.</p></article>
+      </div>
+
+      <h3 class="grp">Setting up the store</h3>
+      <div class="grid">
+        <article class="card c-pink"><h4>Website chat</h4><p>The chat's look, texts, hours and app buttons; pop-up messages; visitor tracking; the embed code and test page.</p></article>
+        <article class="card c-amber"><h4>Store</h4><p>Address and map, contacts, call and text numbers, manager alerts, what the AI knows, and your stores.</p></article>
+        <article class="card c-violet"><h4>Team</h4><p>The dealership's people, their roles and departments, and how new chats are routed. Shows what each role may do.</p></article>
+        <article class="card c-teal"><h4>Pages</h4><p>The dealership page and each person's page with QR codes, to share on stickers, cards and e-mail signatures.</p></article>
+        <article class="card c-slate"><h4>Settings</h4><p>Your account (profile, time zone, template sign-off, password), AI switches, e-mails &amp; alerts. Facebook &amp; Instagram: <span class="soon">Coming soon</span>.</p></article>
+      </div>
+
+      <h3 class="grp">AutoPulse admins</h3>
+      <div class="grid">
+        <article class="card c-blue"><h4>Stores</h4><p>Every dealership on AutoPulse with contact, subscription and leads; add, edit, pause or delete a store; store controls.</p></article>
+        <article class="card c-blue"><h4>Inbox users</h4><p>All sign-ins: create accounts, reset passwords, disable or delete.</p></article>
+        <article class="card c-blue"><h4>Activity</h4><p>Audit log (who did what), system status, website demo/contact enquiries, and calls to outside services.</p></article>
+        <article class="card c-blue"><h4>Store switcher</h4><p><i>Viewing</i> at the top: pick the dealership to look at. Every screen shows only that store's data.</p></article>
+        <article class="card c-blue"><h4>Delete all data</h4><p>Removes everything about one customer (chats, leads, visits, visitor data) after showing what will go.</p></article>
+      </div>
+
+      <h3 class="grp">What customers see</h3>
+      <div class="grid">
+        <article class="card c-pink"><h4>Chat widget</h4><p>Bubble and pop-ups, department choice, contact form, AI answers with car cards, live team replies, lead form and visit booking.</p></article>
+        <article class="card c-amber"><h4>Car pages</h4><p>A public page per car with photos, price, details and Call / Text / Chat buttons (taps are counted).</p></article>
+        <article class="card c-teal"><h4>Dealership &amp; staff pages</h4><p>Address, hours, team, cars and QR code; "Chat with me" on a person's page.</p></article>
+      </div>
+    </section>
+
+    <!-- ================= ROLES ================= -->
+    <section id="roles" class="block">
+      <h2><span class="num">4</span> Who can do what</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Role</th><th>Who</th><th>Can</th></tr></thead>
+          <tbody>
+            <tr><td><span class="role r1">AutoPulse admin</span></td><td>AutoPulse staff</td><td>Everything, for every store: Stores, Inbox users, Activity, store controls, AutoPulse site settings, Delete all data.</td></tr>
+            <tr><td><span class="role r2">Owner</span></td><td>The dealership's account holder</td><td>Their own store(s): inbox, leads, visits, vehicles, visitors, website chat, store details, team, pages, e-mails.</td></tr>
+            <tr><td><span class="role r3">Manager</span></td><td>Added by the owner</td><td>The inbox and the store's settings; the exact rights are in <i>Team → What each role can do</i>.</td></tr>
+            <tr><td><span class="role r4">Agent</span></td><td>Added by the owner or a manager</td><td>The inbox for their departments: reply, save leads, book visits.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The server checks every action against the role, and each store only ever sees its own chats, leads and settings.</p>
+    </section>
+
+    <!-- ================= CHANNELS ================= -->
+    <section id="channels" class="block">
+      <h2><span class="num">5</span> Channels</h2>
+      <div class="chips">
+        <div class="chip live"><b>Website chat</b><span>Live</span></div>
+        <div class="chip soon"><b>WhatsApp</b><span>Coming soon</span></div>
+        <div class="chip soon"><b>SMS</b><span>Coming soon</span></div>
+        <div class="chip soon"><b>Facebook Messenger</b><span>Coming soon</span></div>
+        <div class="chip soon"><b>Instagram</b><span>Coming soon</span></div>
+      </div>
+      <p class="note">Screens for the coming channels already exist and say <i>Coming soon</i>. Older WhatsApp, Messenger and Instagram chats copied from before can still be read in the Inbox.</p>
+    </section>
+
+    <!-- ================= TESTERS ================= -->
+    <section id="testing" class="block">
+      <h2><span class="num">6</span> For testers</h2>
+      <div class="grid two">
+        <article class="card plain"><h4>Where to test</h4><p>Only in <b>AutoPulse Test Dealership</b> (pick it under <i>Viewing</i>). Real dealers then never get test chats or e-mails. Dealer e-mail is in test mode: lead and alert e-mails go to the AutoPulse test inbox.</p></article>
+        <article class="card plain"><h4>The website chat</h4><p><i>Website chat → Open test page</i> opens the store's chat like a customer sees it. Use a name with letters only and a real-looking e-mail and phone (the form checks them).</p></article>
+        <article class="card plain"><h4>Recording results</h4><p>The <b>Feature &amp; Test Sheet</b> (AutoPulse admins: <i>Help → Feature &amp; test sheet</i>) lists every feature and button with steps and the expected result. Record Pass, Fail or Blocked with a note and screenshots.</p></article>
+        <article class="card plain"><h4>Cleaning up</h4><p>After a test, an AutoPulse admin can remove the test customer with <i>Delete all data</i> in the chat. Never use a real customer's details.</p></article>
+      </div>
+    </section>
+
+    <!-- ================= GLOSSARY ================= -->
+    <section id="words" class="block">
+      <h2><span class="num">7</span> Words we use</h2>
+      <dl class="glossary">
+        <div><dt>Lead</dt><dd>A customer interested in a car, with their contact details, saved from a chat or a form.</dd></div>
+        <div><dt>ADF</dt><dd>The e-mail format dealer CRMs import leads from. Each new lead and appointment is sent in it.</dd></div>
+        <div><dt>Department</dt><dd>Sales, Service, Finance… The visitor picks one; it decides who gets the chat.</dd></div>
+        <div><dt>Human / take over</dt><dd>The team replies instead of the AI; the AI stays paused for that chat until switched back on.</dd></div>
+        <div><dt>Queue</dt><dd>A chat waiting for someone in its department.</dd></div>
+        <div><dt>Unreplied</dt><dd>The customer wrote last and nobody has answered yet.</dd></div>
+        <div><dt>Identified visitor</dt><dd>A website visitor who gave their details in the chat.</dd></div>
+        <div><dt>Test dealership</dt><dd>A store only for testing; its chats and e-mails never reach a real dealer.</dd></div>
+        <div><dt>Coming soon</dt><dd>A feature that is built but not switched on in this app yet (WhatsApp, SMS, Messenger, Instagram).</dd></div>
+      </dl>
+    </section>
+  </main>
+
+  <footer class="foot"><div class="wrap">AutoPulse Connect · <a href="/">Open the app</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></div></footer>
+</body>
+</html>
