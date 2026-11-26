@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ONE-TIME setup on Contabo (run as root). Safe to re-run. Touches only:
+# ONE-TIME setup on the server (run as root). Safe to re-run. Touches only:
 #   /opt/node-22, /opt/autopulse-connect-api, /opt/autopulse-connect-web, one new nginx site on port 8090,
 #   ufw port 8090, and root's ~/.ssh/authorized_keys (the CI deploy key).
 # Does NOT change the global Node 18, any other app, or the live Connect Hub (/opt/autopulse-connect).

@@ -1,0 +1,60 @@
+# AutoPulse Connect (Next.js frontend + NestJS API) at https://__DOMAIN__
+# Written by deploy/ensure-domain.sh ONLY when no nginx site serves __DOMAIN__ yet; certbot then adds the
+# 443/SSL lines and the http→https redirect. Backend paths go to the API (127.0.0.1:__API_PORT__),
+# everything else to the Next server (127.0.0.1:__WEB_PORT__). Same as the live site on the current server.
+
+map $http_upgrade $autopulse_next_connection { default upgrade; '' close; }
+
+upstream autopulse_next_api { server 127.0.0.1:__API_PORT__; keepalive 16; }
+upstream autopulse_next_web { server 127.0.0.1:__WEB_PORT__; keepalive 16; }
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__;
+
+    client_max_body_size 25m;   # chat attachments go up to 22 MB
+    proxy_read_timeout 120s;
+
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Connection "";
+
+    # Live updates (Socket.io, websocket upgrade)
+    location /socket.io/ {
+        proxy_pass http://autopulse_next_api;
+        # a location with its own proxy_set_header inherits none from the server block, so repeat them
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $autopulse_next_connection;
+        proxy_read_timeout 1h;
+    }
+
+    # Everything the backend keeps serving (same list as next.config.ts BACKEND_PATHS)
+    location /api/                  { proxy_pass http://autopulse_next_api; }
+    location = /widget.js           { proxy_pass http://autopulse_next_api; }
+    location /cars/                 { proxy_pass http://autopulse_next_api; }
+    location /d/                    { proxy_pass http://autopulse_next_api; }
+    location /customer/             { proxy_pass http://autopulse_next_api; }
+    location /me/                   { proxy_pass http://autopulse_next_api; }
+    location /media/                { proxy_pass http://autopulse_next_api; }
+    location /guide                 { proxy_pass http://autopulse_next_api; }
+    location /sheet/                { proxy_pass http://autopulse_next_api; }
+    location /webhook               { proxy_pass http://autopulse_next_api; }
+    location /twilio/               { proxy_pass http://autopulse_next_api; }
+    location = /verify-email        { proxy_pass http://autopulse_next_api; }
+    location /auth/google           { proxy_pass http://autopulse_next_api; }
+    location = /meta/connect/callback { proxy_pass http://autopulse_next_api; }
+    location = /meta/instagram/callback { proxy_pass http://autopulse_next_api; }
+    location = /healthz             { proxy_pass http://autopulse_next_api; }
+    location = /readyz              { proxy_pass http://autopulse_next_api; }
+
+    # Pages + static assets
+    location / { proxy_pass http://autopulse_next_web; }
+}
