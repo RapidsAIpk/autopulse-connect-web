@@ -2871,6 +2871,8 @@ function wire() {
       $("messages")?.replaceChildren();
       applyDealership(next.dealership, next.dealerships);
       applyAiInbound(next.aiInboundEnabled, next.aiPlatforms, next.aiTakeoverMinutes);
+      // Pages with their own store picker (Dashboard) go back to following the store being viewed.
+      document.dispatchEvent(new CustomEvent("dealership:switched", { detail: { id: next.dealership?.id } }));
       await Promise.all([loadContacts(), loadStats(), loadAssignableStaff()]);
       // The new store may be another kind (inbox-only or AutoPulse CRM): refresh which pages and panels apply.
       const me = await api("/api/me").catch(() => null);
