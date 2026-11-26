@@ -3,7 +3,7 @@ name: CI / Deploy
 # Every push / PR: type-check, lint, build. Push to main: ship the standalone build to the server and reload it.
 # Secrets (repo → Settings → Secrets → Actions): SERVER_HOST, SERVER_USER, SERVER_SSH_KEY.
 # Variables (repo → Settings → Secrets and variables → Actions → Variables):
-#   DEPLOY_DOMAIN  default app.217-77-10-180.sslip.io: nginx site + free Let's Encrypt SSL, renewed when due
+#   DEPLOY_DOMAIN  default aws.54-88-250-148.sslip.io: nginx site + free Let's Encrypt SSL, renewed when due
 #                  (deploy/ensure-domain.sh; an existing site/certificate is left as it is).
 #   CERTBOT_EMAIL  optional, Let's Encrypt expiry notices.
 
@@ -67,7 +67,7 @@ jobs:
           KEY: ${{ secrets.SERVER_SSH_KEY }}
           # The one domain for frontend + backend (nginx splits the paths). New server/domain: set the
           # DEPLOY_DOMAIN variable; without it, the current server's domain is used.
-          DOMAIN: ${{ vars.DEPLOY_DOMAIN || 'app.217-77-10-180.sslip.io' }}
+          DOMAIN: ${{ vars.DEPLOY_DOMAIN || 'aws.54-88-250-148.sslip.io' }}
           CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
         run: |
           [ -n "$HOST" ] && [ -n "$USER" ] && [ -n "$KEY" ] || { echo "Missing secret: add SERVER_HOST, SERVER_USER and SERVER_SSH_KEY (repo → Settings → Secrets → Actions)"; exit 1; }
