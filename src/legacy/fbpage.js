@@ -37,6 +37,8 @@ export async function loadFacebookPage() {
     panel.hidden = true;
     return;
   }
+  // Meta is not set up on this server yet (no app keys): people who could connect see "Coming soon" instead of buttons.
+  if (data.canEdit && !data.ready && !data.instagramLogin && !data.page && !data.instagram) return renderComingSoon();
   // Shown to people who can connect, and to everyone once a Page is connected (so they know where chats come from).
   renderInstagram(data);
   panel.hidden = !(data.canEdit && data.ready) && !data.page;
@@ -50,6 +52,18 @@ export async function loadFacebookPage() {
   if (pick && data.canEdit && !data.page) return renderPicker(data);
   pick = "";
   renderStatus(data);
+}
+
+function renderComingSoon() {
+  const { h, $ } = ctx;
+  const ig = $("instagram-panel");
+  if (ig) ig.hidden = true;
+  note("");
+  showError("");
+  $("fbpage-body").replaceChildren(h("p", { class: "callout coming-soon" },
+    h("b", { text: "Coming soon. " }),
+    "Connecting your Facebook Page and Instagram will be available here soon. Until then, website chats come to this inbox as usual."));
+  $("fbpage-panel").hidden = false;
 }
 
 function renderStatus(data) {
