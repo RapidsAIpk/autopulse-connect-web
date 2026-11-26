@@ -1296,9 +1296,10 @@ function renderThreadHeader() {
     note.textContent = `${platformLabel(channel)}'s 24-hour window is closed. You can still answer as a person for up to 7 days after their last message (Meta's Human Agent rule). The AI can't.`;
   } else if (channel === "website" && isLiveWeb(c.phone)) {
     note.hidden = false;
-    note.textContent = c.windowOpen
-      ? "Live chat from the dealer's website. Your reply appears in the visitor's chat window right away."
-      : "The visitor has not written in the last 24 hours, so they may have left the website.";
+    const quiet = !c.lastInboundAt || Date.now() - Number(c.lastInboundAt) > 24 * 60 * 60 * 1000;
+    note.textContent = quiet
+      ? "Live chat from the dealer's website. The visitor has not written in the last 24 hours: your reply is saved and they see it when they come back to the website."
+      : "Live chat from the dealer's website. Your reply appears in the visitor's chat window right away.";
   } else if (website) {
     note.hidden = false;
     note.textContent = "Copy of a chat from the old chatbot app. Read-only: the AI answered it on the website.";
