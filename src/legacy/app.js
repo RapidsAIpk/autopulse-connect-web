@@ -1256,8 +1256,10 @@ function renderThreadHeader() {
     deptMark.className = `tag dept dept-${c.department || ""}`;
   }
   renderConsent(c);
-  $("flag-btn").hidden = c.hasBlocked || c.isGroup || c.isBroadcast || isWeb(c.phone);
-  $("unflag-btn").hidden = !c.hasBlocked || c.isGroup || c.isBroadcast || isWeb(c.phone);
+  // Flag as promo/spam: every live chat, including our website widget's chats (read-only chatbot copies excluded).
+  const flaggable = !c.isGroup && !c.isBroadcast && (!isWeb(c.phone) || isLiveWeb(c.phone));
+  $("flag-btn").hidden = c.hasBlocked || !flaggable;
+  $("unflag-btn").hidden = !c.hasBlocked || !flaggable;
   if ($("call-btn")) {
     $("call-btn").hidden = !c.capabilities?.calling;
     $("call-btn").textContent = isTwilio(c.phone) && voice.outboundEnabled ? "Call now" : "Request call";
