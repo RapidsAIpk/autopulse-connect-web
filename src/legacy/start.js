@@ -24,6 +24,7 @@ const ICON = {
   page: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/>',
   store: '<path d="M4 9.5 5.5 5h13L20 9.5M4 9.5h16M5.5 12v7h13v-7M10 19v-4h4v4"/>',
   ai: '<path d="M12 3l2.2 4.6L19 8.3l-3.5 3.4.8 4.9L12 14.3l-4.3 2.3.8-4.9L5 8.3l4.8-.7z"/>',
+  guide: '<path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5v13c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v13"/>',
 };
 const svg = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[name] || ""}</svg>`;
 
@@ -75,9 +76,13 @@ export async function loadStart() {
     widget && manage ? { icon: "chat", label: "Website chat code", go: "chatwidget", color: "pink" } : null,
     page ? { icon: "page", label: "Share your pages", go: "pages", color: "teal" } : null,
   ].filter(Boolean);
-  $("quick-actions").replaceChildren(...actions.map((a) => {
+  const buttons = actions.map((a) => {
     const b = h("button", { type: "button", class: `quick c-${a.color}`, ...(a.go ? { "data-go": a.go } : { "data-act": a.act }) });
     b.innerHTML = `${svg(a.icon)}<span>${a.label}</span>`;
     return b;
-  }));
+  });
+  // How the app works: the overview page (flow, every screen, roles), for new users and testers.
+  const overview = h("a", { class: "quick c-blue", href: "/overview", target: "_blank", rel: "noopener", title: "The flow, every screen and who can do what" });
+  overview.innerHTML = `${svg("guide")}<span>How the app works</span>`;
+  $("quick-actions").replaceChildren(...buttons, overview);
 }

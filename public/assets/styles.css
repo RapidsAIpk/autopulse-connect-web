@@ -1433,6 +1433,7 @@ body[data-view="settings"], body[data-view="stores"], body[data-view="team"], bo
 .start-step.done .txt strong { color: var(--text-2); }
 .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
 .quick-actions:empty { display: none; }
+a.quick { text-decoration: none; }
 .quick { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--card-c) 35%, var(--line));
   background: color-mix(in srgb, var(--card-c) 10%, var(--panel)); color: var(--text); font: inherit; font-weight: 650; font-size: 13px; cursor: pointer; text-align: left; }
 .quick svg { color: var(--card-c); flex: none; }

@@ -33,7 +33,11 @@ const nextConfig: NextConfig = {
   // Self-contained server (.next/standalone) so the Contabo box only needs Node 22, no node_modules install.
   output: "standalone",
   async rewrites() {
-    return BACKEND_PATHS.map((source) => ({ source, destination: `${API}${source}` }));
+    return [
+      // The app overview (how the app works, every screen and the flow): a static page in public/.
+      { source: "/overview", destination: "/overview.html" },
+      ...BACKEND_PATHS.map((source) => ({ source, destination: `${API}${source}` })),
+    ];
   },
 };
 
