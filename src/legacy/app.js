@@ -2849,6 +2849,8 @@ function wire() {
       $("messages")?.replaceChildren();
       applyDealership(next.dealership, next.dealerships);
       applyAiInbound(next.aiInboundEnabled, next.aiPlatforms, next.aiTakeoverMinutes);
+      // Pages with their own store picker (Dashboard) go back to following the store being viewed.
+      document.dispatchEvent(new CustomEvent("dealership:switched", { detail: { id: next.dealership?.id } }));
       await Promise.all([loadContacts(), loadStats(), loadAssignableStaff()]);
       toast(`This number now works for ${next.dealership.dealershipName}`, "success");
     } catch (error) {
