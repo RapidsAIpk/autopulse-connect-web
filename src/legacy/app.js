@@ -1042,13 +1042,29 @@ function renderContacts() {
 
 const DEPT_LABEL = { sales: "Sales", service: "Service", trade: "Trade-in", finance: "Finance", other: "Other" };
 
+/** Where this customer's lead is: the CRM (found by phone / e-mail), this inbox (saved as a lead here), or both. */
+function leadTag(c) {
+  if (!c || c.isGroup || c.isBroadcast) return null;
+  const known = c.crmIdentity?.status === "known";
+  const fresh = c.crmIdentity?.status === "new";
+  const inbox = Number(c.inboxLeads || 0) > 0;
+  if (!known && !fresh && !inbox) return null;
+  return {
+    text: known && inbox ? "CRM + Inbox lead" : inbox ? "Inbox lead" : known ? "In CRM" : "New lead",
+    cls: known || inbox ? "known" : "new-lead",
+    title: known && inbox ? "In the CRM and saved as a lead in this inbox"
+      : inbox ? "Saved as a lead in this inbox; not found in the CRM"
+      : known ? "Found in the CRM; not saved as a lead in this inbox yet"
+      : "Not in the CRM and not saved as a lead yet",
+  };
+}
+
 function contactTags(c) {
   const open = (e) => { e.stopPropagation(); openLead(c); };
   const tags = [
     c.hasBlocked ? h("span", { class: "tag promo", text: flagLabel(c.flag) }) : null,
     c.department ? h("span", { class: `tag dept dept-${c.department}`, text: DEPT_LABEL[c.department] || c.department }) : null,
-    c.crmIdentity?.status === "known" ? h("span", { class: "tag known", text: "In CRM", role: "button", tabindex: "0", onclick: open }) : null,
-    c.crmIdentity?.status === "new" ? h("span", { class: "tag new-lead", text: "New lead", role: "button", tabindex: "0", onclick: open }) : null,
+    ...(() => { const t = leadTag(c); return t ? [h("span", { class: `tag ${t.cls}`, text: t.text, title: t.title, role: "button", tabindex: "0", onclick: open })] : []; })(),
     c.unreplied && !c.hasBlocked ? h("span", { class: "tag unreplied", text: "Unreplied" }) : null,
     c.botEnabled || (isWeb(c.phone) && !isLiveWeb(c.phone)) ? null : h("span", { class: "tag human", text: "Human" }),
     c.holderName ? h("span", { class: "tag holder", text: c.holderName, title: `${c.holderName} is handling this chat` }) : null,
@@ -1088,7 +1104,11 @@ function upsertContact(contact) {
     (state.filter === "queue" && !merged.holderUserId && Boolean(merged.queuedAt));
   const channelOk = !state.channel || displayChannel(merged) === state.channel;
   const q = (state.search || "").toLowerCase();
-  const searchOk = !q || merged.phone.includes(state.search) || (merged.name || "").toLowerCase().includes(q) || (merged.profileName || "").toLowerCase().includes(q);
+  const digits = q.replace(/\D/g, "");
+  const searchOk = !q || merged.phone.includes(state.search) || (merged.name || "").toLowerCase().includes(q) || (merged.profileName || "").toLowerCase().includes(q)
+    || [merged.visitor?.name, merged.visitor?.email].some((v) => String(v || "").toLowerCase().includes(q))
+    || (digits.length >= 4 && String(merged.visitor?.phone || "").replace(/\D/g, "").includes(digits))
+    || idx >= 0; // already in the search results (the server matched it, e.g. on message text): keep it
   if (matches && channelOk && searchOk && !merged.silentVisitor) {
     state.contacts.push(merged);
     state.contacts.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
@@ -1125,6 +1145,12 @@ async function loadOlderMessages(button) {
 async function openContact(phone) {
   const { contact, messages } = await api(`/api/contacts/${encodeURIComponent(phone)}`);
   state.active = contact;
+  // The chat list shows the same tags (lead, department…): refresh this chat's entry too.
+  const listed = state.contacts.findIndex((x) => x.phone === contact.phone);
+  if (listed >= 0) {
+    state.contacts[listed] = { ...state.contacts[listed], ...contact };
+    renderContacts();
+  }
   state.messages = messages;
   state.olderMessages = messages.length >= 100; // the server sends the latest 100
   state.starredOnly = false;
@@ -1237,17 +1263,13 @@ function renderThreadHeader() {
   $("bot-label").textContent = c.botEnabled ? "AI replying" : "Human handling";
   const leadMark = $("t-lead");
   if (leadMark) {
-    // Where this customer's lead is: the CRM (found by phone / e-mail), this inbox (saved as a lead here), or both.
-    const known = c.crmIdentity?.status === "known";
-    const fresh = c.crmIdentity?.status === "new";
-    const inbox = Number(c.inboxLeads || 0) > 0;
-    leadMark.hidden = (!known && !fresh && !inbox) || c.isGroup || c.isBroadcast;
-    leadMark.textContent = known && inbox ? "CRM + Inbox lead" : inbox ? "Inbox lead" : known ? "In CRM" : "New lead";
-    leadMark.title = known && inbox ? "In the CRM and saved as a lead in this inbox"
-      : inbox ? "Saved as a lead in this inbox; not found in the CRM"
-      : known ? "Found in the CRM; not saved as a lead in this inbox yet"
-      : "Not in the CRM and not saved as a lead yet";
-    leadMark.className = `tag ${known || inbox ? "known" : "new-lead"}`;
+    const t = leadTag(c);
+    leadMark.hidden = !t;
+    if (t) {
+      leadMark.textContent = t.text;
+      leadMark.title = t.title;
+      leadMark.className = `tag ${t.cls}`;
+    }
   }
   const deptMark = $("t-dept");
   if (deptMark) {
