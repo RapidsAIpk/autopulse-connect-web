@@ -620,6 +620,7 @@ function syncDealershipChrome() {
   if (panel && state.crm) panel.hidden = true;
   const numberPanel = $("number-binding");
   if (numberPanel) numberPanel.hidden = !(state.crm && accountKind() === "superadmin");
+  syncComingSoon();
   if (state.view === "settings") paintSettingsTabs();
 }
 
@@ -820,6 +821,7 @@ function applyAiInbound(enabled, platforms, takeover) {
   if (takeover !== undefined && $("ai-takeover")) $("ai-takeover").value = String(takeover);
   state.aiInboundEnabled = Boolean(enabled);
   if (Array.isArray(platforms)) state.aiPlatforms = platforms;
+  syncComingSoon();
   const banner = $("ai-global-banner");
   if (banner) banner.hidden = state.aiInboundEnabled;
   const toggle = $("ai-inbound-toggle");
@@ -845,6 +847,27 @@ function aiOffForChannel(channel) {
 
 function platformLabel(channel) {
   return (state.aiPlatforms || []).find((p) => p.id === channel)?.label || CHANNEL_LABEL[channel] || channel;
+}
+
+/** A messaging channel not set up on this server yet (no keys): its screens say "Coming soon" instead of failing. */
+function channelComingSoon(id) {
+  const rows = state.aiPlatforms || [];
+  const row = rows.find((p) => p.id === id);
+  return Boolean(rows.length && row && !row.connected);
+}
+
+/** "Coming soon" on the WhatsApp number panel (AutoPulse admins) while WhatsApp/SMS are not set up. */
+function syncComingSoon() {
+  const panel = $("number-binding");
+  if (!panel) return;
+  const soon = channelComingSoon("twilio") && channelComingSoon("sms");
+  let el = panel.querySelector(".coming-soon");
+  if (!el) {
+    el = h("p", { class: "callout coming-soon" }, h("b", { text: "Coming soon. " }), "WhatsApp and SMS are not connected on this app yet. The website chat works as usual.");
+    panel.querySelector("h3")?.after(el);
+  }
+  el.hidden = !soon;
+  for (const c of panel.querySelectorAll("select, button, input")) c.disabled = soon;
 }
 
 function renderAiPlatforms() {
@@ -4097,11 +4120,15 @@ function bindTemplateDialog() {
 
 function syncNewChatChannel() {
   const sms = $("new-chat-channel").value === "sms";
-  $("new-chat-message-field").hidden = !sms;
-  $("new-chat-hint").textContent = sms
-    ? "Send the first SMS, or leave it blank to save the number. Use the country code, for example 17186075434."
-    : "Saves a WhatsApp chat, then lets you send an approved template. Free text unlocks once the customer replies.";
+  const soon = channelComingSoon(sms ? "sms" : "twilio");
+  $("new-chat-message-field").hidden = !sms || soon;
+  $("new-chat-hint").textContent = soon
+    ? `Coming soon: ${sms ? "SMS" : "WhatsApp"} is not connected on this app yet.`
+    : sms
+      ? "Send the first SMS, or leave it blank to save the number. Use the country code, for example 17186075434."
+      : "Saves a WhatsApp chat, then lets you send an approved template. Free text unlocks once the customer replies.";
   $("new-chat-ok").textContent = "Save chat";
+  $("new-chat-ok").disabled = soon;
 }
 
 init().catch((error) => toast(error.message, "error"));
