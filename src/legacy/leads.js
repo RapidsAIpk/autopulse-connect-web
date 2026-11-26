@@ -790,15 +790,18 @@ export function loadConversationsView() {
 
 // ---------- chat actions ----------
 
+// Save lead / Book visit start from what is known: the CRM, the chat's name, and what a website visitor typed in
+// the chat's contact form (name, e-mail, phone).
 function contactName(c) {
-  return c?.crmIdentity?.customer?.name || c?.crmIdentity?.lead?.name || c?.name || c?.profileName || "";
+  return c?.crmIdentity?.customer?.name || c?.crmIdentity?.lead?.name || c?.visitor?.name || c?.name || c?.profileName || "";
 }
 function contactEmail(c) {
-  return c?.crmIdentity?.customer?.email || c?.crmIdentity?.lead?.email || "";
+  return c?.crmIdentity?.customer?.email || c?.crmIdentity?.lead?.email || c?.visitor?.email || "";
 }
 function contactPhone(c) {
   const key = String(c?.phone || "").split("@")[0];
-  return /^(tw|sms):|^\d/.test(key) ? key.replace(/\D/g, "") : "";
+  if (/^(tw|sms):|^\d/.test(key)) return key.replace(/\D/g, "");
+  return String(c?.visitor?.phone || c?.crmIdentity?.customer?.phone || "").replace(/\D/g, "");
 }
 
 function openForm(dialogId, formId, values) {

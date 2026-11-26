@@ -1177,8 +1177,8 @@ function renderThreadHeader() {
   // Inbox-only stores: the customer's page (details, all chats, leads, visits, consent; and their own private link).
   const custBtn = $("customer-page-btn");
   if (custBtn) {
-    const inboxOnly = /^own:/.test(String(c.crmDealerId || "")) || (["owner", "member"].includes(accountKind()) && !c.crmDealerId);
-    custBtn.hidden = !inboxOnly || c.isGroup || c.isBroadcast;
+    // Every direct chat has a customer profile (the server checks the person may see it).
+    custBtn.hidden = Boolean(c.isGroup || c.isBroadcast);
     custBtn.href = `/customer/${encodeURIComponent(c.phone)}`;
   }
   const channel = channelOf(c);
@@ -1237,11 +1237,17 @@ function renderThreadHeader() {
   $("bot-label").textContent = c.botEnabled ? "AI replying" : "Human handling";
   const leadMark = $("t-lead");
   if (leadMark) {
+    // Where this customer's lead is: the CRM (found by phone / e-mail), this inbox (saved as a lead here), or both.
     const known = c.crmIdentity?.status === "known";
     const fresh = c.crmIdentity?.status === "new";
-    leadMark.hidden = (!known && !fresh) || c.isGroup || c.isBroadcast;
-    leadMark.textContent = known ? "In CRM" : "New lead";
-    leadMark.className = `tag ${known ? "known" : "new-lead"}`;
+    const inbox = Number(c.inboxLeads || 0) > 0;
+    leadMark.hidden = (!known && !fresh && !inbox) || c.isGroup || c.isBroadcast;
+    leadMark.textContent = known && inbox ? "CRM + Inbox lead" : inbox ? "Inbox lead" : known ? "In CRM" : "New lead";
+    leadMark.title = known && inbox ? "In the CRM and saved as a lead in this inbox"
+      : inbox ? "Saved as a lead in this inbox; not found in the CRM"
+      : known ? "Found in the CRM; not saved as a lead in this inbox yet"
+      : "Not in the CRM and not saved as a lead yet";
+    leadMark.className = `tag ${known || inbox ? "known" : "new-lead"}`;
   }
   const deptMark = $("t-dept");
   if (deptMark) {
