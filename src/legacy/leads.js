@@ -933,11 +933,14 @@ export function initLeads(helpers) {
     const c = ui.state.active;
     const { lead, created } = await ui.api(`/api/contacts/${encodeURIComponent(c.phone)}/leads`, { method: "POST", body });
     ui.toast(created ? "Lead saved" : `Already saved today as lead #${lead.id}`, "success");
+    // The chat header's lead tag changes right away ("New lead" → "Inbox lead", "In CRM" → "CRM + Inbox lead").
+    if (ui.state.active?.phone === c.phone) await ui.openContact(c.phone).catch(() => {});
   });
   wireForm("appt-form-dialog", "appt-form", async (body) => {
     const c = ui.state.active;
     await ui.api(`/api/contacts/${encodeURIComponent(c.phone)}/appointments`, { method: "POST", body });
     ui.toast("Visit booked", "success");
+    if (ui.state.active?.phone === c.phone) await ui.openContact(c.phone).catch(() => {});
   });
 
   $("adf-form").addEventListener("submit", async (e) => {
