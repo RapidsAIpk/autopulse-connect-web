@@ -434,6 +434,24 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 
+// The private feature & test sheet: AutoPulse admins get its link in every Help pop-up (others get a 403 and no link).
+let sheetUrl = null;
+let sheetAsked = false;
+async function loadSheetUrl() {
+  if (sheetAsked) return;
+  sheetAsked = true;
+  try {
+    const r = await fetch("/api/admin/feature-sheet", { credentials: "same-origin" });
+    if (r.ok) sheetUrl = (await r.json()).url || null;
+  } catch {
+    sheetUrl = null;
+  }
+}
+
+function sheetLink() {
+  return sheetUrl ? el("a", { class: "btn btn-sm help-sheet-link", href: sheetUrl, target: "_blank", rel: "noopener noreferrer" }, "Feature & test sheet") : null;
+}
+
 export function openHelp(key, { tourKey = null } = {}) {
   const help = HELP[key];
   if (!help) return;
@@ -451,11 +469,20 @@ export function openHelp(key, { tourKey = null } = {}) {
       el("div", { class: "help-pop-actions" },
         tour ? el("button", { type: "button", class: "btn btn-primary btn-sm", onclick: () => { closePop(); startTour(tourKey || key); } }, "Show me") : null,
         el("button", { type: "button", class: "btn btn-sm", onclick: closePop }, "Got it"),
+        sheetLink(),
         el("label", { class: "help-pop-hide" },
           el("input", { type: "checkbox", onchange: (e) => setIconsHidden(e.target.checked) }),
           " Hide ? icons"))));
   document.body.append(popEl);
   popEl.querySelector(".help-pop-close").focus();
+  // First Help of the session: ask once whether this person may see the sheet, then add the link.
+  if (!sheetAsked) {
+    const pop = popEl;
+    loadSheetUrl().then(() => {
+      const link = sheetLink();
+      if (link && pop.isConnected) pop.querySelector(".help-pop-actions")?.append(link);
+    });
+  }
 }
 
 // ---------- tours ----------

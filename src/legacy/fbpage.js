@@ -38,7 +38,12 @@ export async function loadFacebookPage() {
     return;
   }
   // Meta is not set up on this server yet (no app keys): people who could connect see "Coming soon" instead of buttons.
-  if (data.canEdit && !data.ready && !data.instagramLogin && !data.page && !data.instagram) return renderComingSoon();
+  // (A Page or account saved earlier stays in the database, but nothing can be sent or changed without the keys.)
+  if (!data.ready && !data.instagramLogin) {
+    if (data.canEdit || data.page || data.instagram) return renderComingSoon();
+    panel.hidden = true;
+    return;
+  }
   // Shown to people who can connect, and to everyone once a Page is connected (so they know where chats come from).
   renderInstagram(data);
   panel.hidden = !(data.canEdit && data.ready) && !data.page;
