@@ -3,9 +3,10 @@ import type { NextRequest } from "next/server";
 
 const API = process.env.API_ORIGIN || "http://localhost:4009";
 
-/** Same check the old server did (public.mjs loadSession): is the `rapids_sid` cookie a live session? */
+/** Same check the old server did (public.mjs loadSession): is the session cookie a live session? */
 async function signedIn(request: NextRequest): Promise<boolean | null> {
-  if (!request.cookies.get("rapids_sid")?.value) return false;
+  // The API names the cookie __Host-rapids_sid when COOKIE_SECURE is on (HTTPS), rapids_sid otherwise.
+  if (!request.cookies.get("__Host-rapids_sid")?.value && !request.cookies.get("rapids_sid")?.value) return false;
   try {
     const res = await fetch(`${API}/api/me`, {
       headers: { cookie: request.headers.get("cookie") || "" },
