@@ -72,8 +72,9 @@ jobs:
         run: |
           [ -n "$HOST" ] && [ -n "$USER" ] && [ -n "$KEY" ] || { echo "Missing secret: add SERVER_HOST, SERVER_USER and SERVER_SSH_KEY (repo → Settings → Secrets → Actions)"; exit 1; }
           # Only plain host names / e-mail characters go into the remote command line.
-          printf '%s' "$DOMAIN" | grep -Eq '^[A-Za-z0-9.-]*$' || { echo "DEPLOY_DOMAIN is not a host name"; exit 1; }
-          printf '%s' "$CERTBOT_EMAIL" | grep -Eq '^[A-Za-z0-9._%+@-]*$' || { echo "CERTBOT_EMAIL is not an e-mail"; exit 1; }
+          # (bash pattern match, not grep: an empty value gives grep no line and counts as a failure)
+          [[ "$DOMAIN" =~ ^[A-Za-z0-9.-]*$ ]] || { echo "DEPLOY_DOMAIN is not a host name"; exit 1; }
+          [[ "$CERTBOT_EMAIL" =~ ^[A-Za-z0-9._%+@-]*$ ]] || { echo "CERTBOT_EMAIL is not an e-mail"; exit 1; }
           install -m 600 /dev/null ~/key && printf '%s\n' "$KEY" > ~/key
           OPTS="-i $HOME/key -o StrictHostKeyChecking=accept-new"
           RID="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
