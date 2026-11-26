@@ -1,5 +1,5 @@
 // pm2 app for the web frontend on the server: the Next.js standalone server, private on 127.0.0.1:3020
-// (nginx is the only public entry). Own Node 22 (/opt/node-22); the box's other apps keep Node 18.
+// (nginx is the only public entry). Own Node 22 (/opt/node-22); the box's global Node is left alone.
 module.exports = {
   apps: [
     {
