@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs ON Contabo (called by GitHub Actions). Unpacks the standalone build, switches `current`, reloads pm2,
+# Runs ON the server (called by GitHub Actions). Unpacks the standalone build, switches `current`, reloads pm2,
 # and rolls back automatically if the page does not answer.
 #   usage: remote-deploy.sh <release-tarball> <release-id>
 set -euo pipefail
@@ -23,6 +23,9 @@ for i in $(seq 1 20); do
   if [ "$code" = "200" ] || [ "$code" = "307" ]; then
     echo "Web healthy (release $2)"
     ls -1dt "$APP"/releases/* | tail -n +6 | xargs -r rm -rf   # keep the last 5 releases
+    # Domain + free SSL (nginx, Let's Encrypt): adds them on a new server, renews when due, leaves a working
+    # setup alone. A failure here marks the run red but keeps the new (healthy) release running.
+    bash "$RELEASE/deploy/ensure-domain.sh" "$RELEASE"
     exit 0
   fi
   sleep 3

@@ -1,7 +1,11 @@
 name: CI / Deploy
 
-# Every push / PR: type-check, lint, build. Push to main: ship the standalone build to Contabo and reload it.
-# Secrets (repo → Settings → Secrets → Actions): CONTABO_HOST, CONTABO_USER, CONTABO_SSH_KEY.
+# Every push / PR: type-check, lint, build. Push to main: ship the standalone build to the server and reload it.
+# Secrets (repo → Settings → Secrets → Actions): SERVER_HOST, SERVER_USER, SERVER_SSH_KEY.
+# Variables (repo → Settings → Secrets and variables → Actions → Variables):
+#   DEPLOY_DOMAIN  default app.217-77-10-180.sslip.io: nginx site + free Let's Encrypt SSL, renewed when due
+#                  (deploy/ensure-domain.sh; an existing site/certificate is left as it is).
+#   CERTBOT_EMAIL  optional, Let's Encrypt expiry notices.
 
 on:
   push:
@@ -56,14 +60,22 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: web-release
-      - name: Ship to Contabo and reload
+      - name: Ship to the server and reload
         env:
-          HOST: ${{ secrets.CONTABO_HOST }}
-          USER: ${{ secrets.CONTABO_USER }}
-          KEY: ${{ secrets.CONTABO_SSH_KEY }}
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+          KEY: ${{ secrets.SERVER_SSH_KEY }}
+          # The one domain for frontend + backend (nginx splits the paths). New server/domain: set the
+          # DEPLOY_DOMAIN variable; without it, the current server's domain is used.
+          DOMAIN: ${{ vars.DEPLOY_DOMAIN || 'app.217-77-10-180.sslip.io' }}
+          CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
         run: |
+          [ -n "$HOST" ] && [ -n "$USER" ] && [ -n "$KEY" ] || { echo "Missing secret: add SERVER_HOST, SERVER_USER and SERVER_SSH_KEY (repo → Settings → Secrets → Actions)"; exit 1; }
+          # Only plain host names / e-mail characters go into the remote command line.
+          printf '%s' "$DOMAIN" | grep -Eq '^[A-Za-z0-9.-]*$' || { echo "DEPLOY_DOMAIN is not a host name"; exit 1; }
+          printf '%s' "$CERTBOT_EMAIL" | grep -Eq '^[A-Za-z0-9._%+@-]*$' || { echo "CERTBOT_EMAIL is not an e-mail"; exit 1; }
           install -m 600 /dev/null ~/key && printf '%s\n' "$KEY" > ~/key
           OPTS="-i $HOME/key -o StrictHostKeyChecking=accept-new"
           RID="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
           scp $OPTS release.tgz "$USER@$HOST:/tmp/web-$RID.tgz"
-          ssh $OPTS "$USER@$HOST" "mkdir -p /tmp/web-$RID && tar -xzf /tmp/web-$RID.tgz -C /tmp/web-$RID ./deploy/remote-deploy.sh && bash /tmp/web-$RID/deploy/remote-deploy.sh /tmp/web-$RID.tgz $RID; s=\$?; rm -rf /tmp/web-$RID; exit \$s"
+          ssh $OPTS "$USER@$HOST" "mkdir -p /tmp/web-$RID && tar -xzf /tmp/web-$RID.tgz -C /tmp/web-$RID ./deploy/remote-deploy.sh && DOMAIN='$DOMAIN' CERTBOT_EMAIL='$CERTBOT_EMAIL' bash /tmp/web-$RID/deploy/remote-deploy.sh /tmp/web-$RID.tgz $RID; s=\$?; rm -rf /tmp/web-$RID; exit \$s"
