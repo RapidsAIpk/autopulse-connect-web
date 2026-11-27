@@ -1823,7 +1823,7 @@ function clearReplyTo() {
 
 function formatBubbleText(text) {
   const p = h("p", { class: "bubble-text" });
-  const re = /(\*[^*\n]+\*|_[^_\n]+_|~[^~\n]+~|```[\s\S]+?```|`[^`\n]+`|https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+  const re = /(\[[^\]\n]{1,120}\]\(https?:\/\/[^\s)]+\)|\*[^*\n]+\*|_[^_\n]+_|~[^~\n]+~|```[\s\S]+?```|`[^`\n]+`|https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
   let last = 0;
   let match;
   const source = String(text || "");
@@ -1837,7 +1837,10 @@ function formatBubbleText(text) {
   while ((match = re.exec(source))) {
     if (match.index > last) p.append(source.slice(last, match.index));
     const token = match[1];
-    if (token.startsWith("```")) p.append(h("code", { class: "wa-pre", text: token.slice(3, -3) }));
+    // Markdown link from the AI: [text](https://…) shows as a link with that text.
+    const md = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(token);
+    if (md) p.append(h("a", { class: "bubble-link", href: md[2], target: "_blank", rel: "noopener noreferrer", text: md[1] }));
+    else if (token.startsWith("```")) p.append(h("code", { class: "wa-pre", text: token.slice(3, -3) }));
     else if (token.startsWith("*")) p.append(h("strong", { text: token.slice(1, -1) }));
     else if (token.startsWith("_")) p.append(h("em", { text: token.slice(1, -1) }));
     else if (token.startsWith("~")) p.append(h("s", { text: token.slice(1, -1) }));

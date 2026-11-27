@@ -469,6 +469,7 @@ export function openHelp(key, { tourKey = null } = {}) {
       el("div", { class: "help-pop-actions" },
         tour ? el("button", { type: "button", class: "btn btn-primary btn-sm", onclick: () => { closePop(); startTour(tourKey || key); } }, "Show me") : null,
         el("button", { type: "button", class: "btn btn-sm", onclick: closePop }, "Got it"),
+        el("a", { class: "btn btn-sm help-manual-link", href: "/manual", target: "_blank", rel: "noopener" }, "User manual"),
         sheetLink(),
         el("label", { class: "help-pop-hide" },
           el("input", { type: "checkbox", onchange: (e) => setIconsHidden(e.target.checked) }),
