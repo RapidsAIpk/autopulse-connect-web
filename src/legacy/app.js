@@ -2429,7 +2429,8 @@ async function loadUsers() {
             ? h("span", { class: "muted small", title: "This person signs in with their AutoPulse CRM password. Change it in AutoPulse CRM.", text: "Password: AutoPulse CRM" })
             : h("button", { class: "btn btn-sm", type: "button", text: "Reset password", onclick: () => resetPassword(u) }),
           self ? null : h("button", { class: "btn btn-sm", type: "button", text: u.disabled ? "Enable" : "Disable", onclick: () => toggleUser(u) }),
-          self ? null : h("button", { class: "btn btn-sm btn-danger", type: "button", text: "Delete", onclick: () => deleteUser(u) })))));
+          // AutoPulse CRM users are removed in AutoPulse CRM; Disable keeps them out of Connect.
+          self || u.crmUserId ? null : h("button", { class: "btn btn-sm btn-danger", type: "button", text: "Delete", onclick: () => deleteUser(u) })))));
     }
   } catch (error) {
     toast(error.message, "error");
