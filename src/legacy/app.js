@@ -529,6 +529,7 @@ function showView(view) {
   if (view === "visitors") loadVisitorsView();
   if (view === "store") { loadStorePanel(); loadAccountPanel(); loadSettings(); if (state.store?.inboxOnly) loadAiProfile(); }
   if (view === "staff" && state.store?.hasTeam) { loadTeam(); loadStoreSettings(); }
+  else if (view === "staff" && state.store?.crmTeam) loadTeam();
   if (view === "pages" && state.store?.hasTeam) { loadStorePage(); loadMyPage(); }
   document.body.dataset.view = view;
   if (view === "dashboard") { loadDashboardView(); loadStart(); }
