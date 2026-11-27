@@ -1,5 +1,6 @@
 // PORTED by scripts/port-legacy.mjs from autopulse-connect-hub/public/assets/stores.js — edit the port script, not this file.
 import { legacyFetch } from "@/lib/legacyFetch";
+import { openStoreBilling } from "./billing.js";
 // AutoPulse admin screens: Stores (list, filters, CSV, import, add, password, delete, log in as dealer),
 // the "Back to admin" banner, the outside-services log (Activity) and global settings (Settings → AutoPulse site).
 let ctx = null;
@@ -93,7 +94,7 @@ export async function loadStores() {
       "data-tip": s.subscribed
         ? `Can use AutoPulse Connect${s.subscription?.since ? ` · since ${new Date(s.subscription.since).toLocaleDateString()}` : ""}`
         : "Can't use AutoPulse Connect: no sign-in for the dealer's team, website chat off. Subscribe in Actions.",
-    })),
+    }), billingLine(s)),
     h("td", { text: String(s.leads) }),
     h("td", {}, actionsFor(s)),
   )) : [h("tr", {}, h("td", { colspan: "9", class: "muted records-empty", text: "No stores match these filters." }))]));
@@ -115,8 +116,9 @@ function storeActions(s) {
     { key: "open", label: "Open store in new tab" },
     { key: "details", label: "Edit store details" },
     { key: "controls", label: "Store controls (switch AI, channels, features on/off)" },
+    { key: "billing", label: "Billing & payments" },
     s.subscribed
-      ? { key: "unsubscribe", label: "Unsubscribe (can't use Connect)", danger: true }
+      ? { key: "unsubscribe", label: "Unsubscribe (can't use Connect)", danger: true, off: s.billing?.mode === "stripe" && ["active", "trialing", "past_due"].includes(s.billing?.status) ? "This store pays by card. Cancel its subscription in Billing & payments." : "" }
       : { key: "subscribe", label: "Subscribe (can use Connect)" },
     { key: "login", label: "Log in as dealer", off: crm ? "" : !hasOwner ? noAccount : ownerOff },
     { key: "password", label: "Change password", off: crm ? "AutoPulse CRM dealers change their password in AutoPulse CRM." : hasOwner ? "" : noAccount },
@@ -124,12 +126,28 @@ function storeActions(s) {
   ];
 }
 
+/** Under the Subscribed tag: how the store pays (card / manual) and until when. */
+function billingLine(s) {
+  const { h } = ctx;
+  const b = s.billing;
+  if (!b) return null;
+  const date = (ms) => new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const ymd = (d) => date(Date.parse(`${d}T12:00:00`));
+  let text = "";
+  if (b.mode === "stripe") {
+    text = b.status === "past_due" ? "Card · payment failed" : ["active", "trialing"].includes(b.status) ? `Card · ${b.cancelAtPeriodEnd ? "ends" : "paid to"} ${b.currentPeriodEnd ? date(b.currentPeriodEnd) : "—"}` : `Card · ${b.status === "canceled" ? "cancelled" : "not paid"}`;
+  } else if (b.mode === "manual") {
+    text = b.status === "canceled" ? "Manual · ended" : b.endsOn ? `Manual · until ${ymd(b.endsOn)}` : b.trialEndsOn ? `Trial · until ${ymd(b.trialEndsOn)}` : "Manual · no end date";
+  }
+  return text ? h("div", { class: "hint billing-line", text }) : null;
+}
+
 async function setSubscribed(s, on) {
   const { api, toast, confirmDialog } = ctx;
   const crm = s.kind === "crm";
   const ok = await confirmDialog(on
     ? { title: `Subscribe ${s.name}?`, text: `It can use AutoPulse Connect: ${crm ? "its staff sign in with their AutoPulse CRM login" : "its owner and team can sign in"}, and its website chat works.`, okLabel: "Subscribe" }
-    : { title: `Unsubscribe ${s.name}?`, text: `It can't use AutoPulse Connect: ${crm ? "its staff are signed out now" : "its owner and team are stopped"}, and its website chat shows 'Chat is not available'. Its chats and leads stay; you can still open it.`, okLabel: "Unsubscribe" });
+    : { title: `Unsubscribe ${s.name}?`, text: `It can't use AutoPulse Connect: ${crm ? "its staff are signed out now" : "its owner and team are stopped"}, and its website chat shows 'Chat is not available'. Its chats and leads stay; you can still open it.${s.billing?.mode === "manual" ? " Its manual subscription is ended." : ""}`, okLabel: "Unsubscribe" });
   if (!ok) return;
   try {
     const r = await api(`/api/admin/stores/${encodeURIComponent(s.id)}/subscription`, { method: "POST", body: { subscribed: on } });
@@ -181,6 +199,7 @@ function actionsFor(s) {
     if (action === "login") loginAs(s);
     if (action === "password") changePassword(s);
     if (action === "delete") deleteStore(s);
+    if (action === "billing") openStoreBilling(s);
     if (action === "subscribe") setSubscribed(s, true);
     if (action === "unsubscribe") setSubscribed(s, false);
   });

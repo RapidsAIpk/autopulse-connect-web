@@ -7,6 +7,7 @@ import { BROWSER_TIME_ZONE, TIME_ZONE_CHOICES, currentTimeZone, setAppTimeZone }
 import { EMOJI_CATS, emojiKeywords, searchEmojis } from "./emoji.js";
 import { initAccount, loadAccountPanel, loadEnquiries, loadStorePanel, loadWidgetPanel, paintMeAvatar } from "./profile.js";
 import { initStores, loadMessaging, loadOutbound, loadSite, loadStores, showImpersonation } from "./stores.js";
+import { billingTabFor, handlePausedReturn, initBilling, loadBillingAdmin, loadBillingPanel, paintPausedBilling } from "./billing.js";
 import { applyStoreKind, initTeam, loadAiProfile, loadMyPage, loadStorePage, loadStoreSettings, loadTeam } from "./team.js";
 import { initStock, loadStockPanel } from "./stock.js";
 import { initStart, loadStart } from "./start.js";
@@ -516,6 +517,8 @@ function showView(view) {
     loadSettings();
     loadAdfSetting();
     loadFacebookPage().then(() => paintSettingsTabs());
+    loadBillingPanel();
+    loadBillingAdmin();
   }
   if (view === "leads") {
     clearLeadsBadge();
@@ -3517,13 +3520,32 @@ async function init() {
   setAppTimeZone(me.user?.timeZone || ""); // Settings → My account → Time zone
   // Store controls: AutoPulse paused this dealership's sign-in. Show why, with Sign out, instead of the inbox.
   if (me.paused) {
-    document.body.append(h("div", { class: "paused-screen" }, h("div", { class: "paused-card" },
-      h("h2", { text: me.pausedReason === "unsubscribed" ? "Not subscribed" : "Access paused" }),
-      h("p", { class: "muted", text: me.pausedReason === "unsubscribed"
-        ? "Your dealership isn't subscribed to AutoPulse Connect, so the inbox and website chat are off. Nothing has been deleted. Please contact AutoPulse to subscribe."
+    state.csrf = me.csrfToken || state.csrf;
+    // Coming back from Stripe: after paying, confirm it (the page reloads into the app once the store is on);
+    // after going back without paying, show the plans again.
+    const fromStripe = /^#billing=/.test(location.hash);
+    if (await handlePausedReturn({ api, toast })) return;
+    const unsubscribed = me.pausedReason === "unsubscribed";
+    const mayPay = unsubscribed && billingTabFor(me);
+    const plans = h("div", { class: "stack paused-billing", hidden: true });
+    const seePlans = mayPay ? h("button", { type: "button", class: "btn btn-primary", text: "See plans and subscribe" }) : null;
+    seePlans?.addEventListener("click", () => {
+      seePlans.hidden = true;
+      plans.hidden = false;
+      paintPausedBilling(plans, { $, h, api, toast, state, confirmDialog });
+    });
+    document.body.append(h("div", { class: "paused-screen" }, h("div", { class: `paused-card${mayPay ? " paused-card-wide" : ""}` },
+      h("h2", { text: unsubscribed ? "Not subscribed" : "Access paused" }),
+      h("p", { class: "muted", text: unsubscribed
+        ? mayPay
+          ? "Your dealership isn't subscribed to AutoPulse Connect, so the inbox and website chat are off. Nothing has been deleted. Subscribe below, or contact AutoPulse."
+          : "Your dealership isn't subscribed to AutoPulse Connect, so the inbox and website chat are off. Nothing has been deleted. Please contact AutoPulse to subscribe."
         : "AutoPulse has paused access to this dealership for now. Nothing has been deleted. Please contact AutoPulse." }),
+      seePlans,
+      plans,
       h("a", { class: "btn", href: "mailto:contact@autopulse.ai", text: "contact@autopulse.ai" }),
       h("button", { type: "button", class: "btn btn-primary", onclick: async () => { try { await api("/api/auth/logout", { method: "POST" }); } catch {} location.replace("/login"); } }, "Sign out"))));
+    if (mayPay && fromStripe) seePlans.click();
     return;
   }
   const caps = await api("/api/platforms").catch(() => ({ platforms: {}, broadcast: false }));
@@ -3607,6 +3629,8 @@ async function init() {
   setupRail();
   initAccount({ $, h, api, toast, state });
   initStores({ $, h, api, toast, state, confirmDialog });
+  initBilling({ $, h, api, toast, state, confirmDialog, showDealerTab: billingTabFor(me), onStoreBillingClosed: () => { if (state.view === "stores") loadStores(); },
+    openBillingTab: () => { showView("settings"); setTimeout(() => document.querySelector('#settings-tabs [data-stab="billing"]')?.click(), 300); } });
   initTeam({ $, h, api, toast, state, confirmDialog, refreshTabs: () => paintSettingsTabs($("settings-grid")?.dataset.active) });
   initStock({ $, h, api, toast, state, confirmDialog, reloadVehicles: () => loadVehiclesView() });
   initStart({ $, h, api, toast, state, showView });
