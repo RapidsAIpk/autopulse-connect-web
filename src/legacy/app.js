@@ -1392,7 +1392,7 @@ function renderThreadHeader() {
   const locked = holdDecision(c) === "request";
   if (locked) {
     note.hidden = false;
-    note.textContent = `${c.holderName} is handling this chat.`;
+    note.textContent = `Only ${c.holderName} can reply while they handle this chat. Ask to take it if you need to reply.`;
   }
   if ($("template-btn")) $("template-btn").hidden = !canSendTemplate(c) || channelOf(c) !== "twilio" || c.windowOpen || locked;
   const templateTool = $("template-tool");
@@ -1570,7 +1570,12 @@ function renderHold(contact) {
   const holding = Number(contact.holderUserId) === me;
   const floor = runsFloor();
   const requestBtn = $("request-access");
-  if (requestBtn) requestBtn.hidden = decision !== "request";
+  if (requestBtn) {
+    requestBtn.hidden = decision !== "request";
+    const asked = (contact.requests || []).some((row) => row.kind !== "handoff" && row.requesterId === me);
+    requestBtn.textContent = asked ? "Asked ✓" : "Ask to take it";
+    requestBtn.disabled = asked;
+  }
   const requests = contact.requests || [];
   const access = requests.filter((r) => r.kind !== "handoff");
   const handoffs = requests.filter((r) => r.kind === "handoff");
@@ -1578,74 +1583,74 @@ function renderHold(contact) {
   const people = (state.staff || []).filter((p) => Number(p.id) !== Number(contact.holderUserId));
   const bits = [];
   const dept = contact.department ? DEPT_NAMES[contact.department] || contact.department : "";
-  if (contact.holderUserId && !holding) bits.push(h("span", { text: `${contact.holderName} is handling this chat.` }));
-  else if (holding) bits.push(h("span", { text: "You are handling this chat." }));
-  else if (contact.queuedAt) bits.push(h("span", { class: "queue-note", text: `Waiting in the ${dept || "team"} queue.` }));
-  if (!contact.holderUserId && contact.queuedAt) bits.push(h("button", { type: "button", class: "btn btn-sm btn-primary", "data-access": "take-queue", text: "Take this chat" }));
-  if (decision === "request") bits.push(h("button", { type: "button", class: "btn btn-sm", "data-access": "request", text: mine ? "Access requested" : "Request access", disabled: mine }));
-  if (decision === "takeover") bits.push(h("button", { type: "button", class: "btn btn-sm", "data-access": "take", text: "Take over" }));
-  // Transfer (floor): to a person, or to a department's unassigned queue.
-  if (floor && (people.length || state.departments?.length)) {
-    const select = h("select", { class: "hold-assign", "aria-label": "Transfer this chat" },
-      h("option", { value: "", text: "Transfer to…" }),
-      people.length ? h("optgroup", { label: "A person" }, ...people.map((p) => h("option", { value: `u:${p.id}`, text: personLabel(p) }))) : null,
-      state.departments?.length ? h("optgroup", { label: "A department's queue" }, ...state.departments.map((d) => h("option", { value: `d:${d.id}`, text: `${d.label} queue` }))) : null);
-    select.addEventListener("change", async () => {
-      const value = select.value;
-      select.value = "";
+  // Left: who has the chat, in words, and what that means for you.
+  const status = (icon, title, sub, cls = "") => h("div", { class: `hold-status${cls ? ` ${cls}` : ""}` },
+    h("span", { class: "hold-ic", "aria-hidden": "true", text: icon }),
+    h("div", { class: "hold-txt" }, h("strong", { text: title }), sub ? h("small", { text: sub }) : null));
+  if (holding) {
+    bits.push(status("✓", "You're handling this chat", "The customer's replies come to you. Hand it off when you're done.", "mine"));
+  } else if (contact.holderUserId) {
+    const sub = decision === "request"
+      ? (mine ? "You asked to take it; you're told when they answer." : "You can read it. Ask to take it if you need to reply.")
+      : decision === "takeover" ? "You can take it over (it moves to you)." : "";
+    bits.push(status("👤", `Handled by ${contact.holderName}`, sub, "other"));
+  } else if (contact.queuedAt) {
+    bits.push(status("⏳", `Waiting in the ${dept || "team"} queue`, "Nobody has it yet. Take it to answer the customer.", "queue"));
+  }
+  // Right: the one next step as a button, then everything else in one "Hand off" menu.
+  const actions = [];
+  if (!contact.holderUserId && contact.queuedAt) actions.push(h("button", { type: "button", class: "btn btn-sm btn-primary", "data-access": "take-queue", text: "Take this chat" }));
+  if (decision === "request") actions.push(h("button", { type: "button", class: `btn btn-sm${mine ? "" : " btn-primary"}`, "data-access": "request", text: mine ? "Asked ✓" : "Ask to take it", title: "The person handling it approves or declines", disabled: mine }));
+  if (decision === "takeover") actions.push(h("button", { type: "button", class: "btn btn-sm btn-primary", "data-access": "take", text: "Take over", title: "The chat moves to you now" }));
+  const askable = people.filter((p) => Number(p.id) !== me && !handoffs.some((r) => r.targetUserId === p.id));
+  const canAsk = askable.length && (holding || !floor);
+  const canTransfer = floor && (people.length || state.departments?.length);
+  const canRelease = contact.holderUserId && (holding || floor);
+  if (canAsk || canTransfer || canRelease) {
+    const menu = h("select", { class: "hold-assign hold-menu", "aria-label": "Hand off this chat", title: "Ask a colleague, transfer it, or let it go" },
+      h("option", { value: "", text: "Hand off…" }),
+      canAsk ? h("optgroup", { label: "Ask a colleague (they accept or decline)" }, ...askable.map((p) => h("option", { value: `ask:${p.id}`, text: personLabel(p) }))) : null,
+      canTransfer && people.length ? h("optgroup", { label: "Transfer now to a person" }, ...people.map((p) => h("option", { value: `u:${p.id}`, text: personLabel(p) }))) : null,
+      canTransfer && state.departments?.length ? h("optgroup", { label: "Transfer now to a queue" }, ...state.departments.map((d) => h("option", { value: `d:${d.id}`, text: `${d.label} queue` }))) : null,
+      canRelease ? h("optgroup", { label: "Let it go" },
+        h("option", { value: "rel:queue", text: `Back to the ${dept || "team"} queue` }),
+        h("option", { value: "rel:ai", text: "Back to the AI" })) : null);
+    menu.addEventListener("change", async () => {
+      const value = menu.value;
+      menu.value = "";
       if (!value) return;
       const [kind, id] = value.split(":");
-      const label = kind === "u" ? people.find((p) => String(p.id) === id)?.displayName : `the ${DEPT_NAMES[id] || id} queue`;
-      const note = await askNote(`Transfer to ${label}?`, kind === "u" ? "They get the chat and an alert." : "Nobody holds it until someone in that department takes it; they get an alert.");
-      if (note === null) return;
-      if (kind === "u") accessAction("assign", { userId: Number(id), note }, `Transferred to ${label}`);
-      else accessAction("transfer", { department: id, note }, `Sent to ${label}`);
+      if (kind === "ask") {
+        const who = askable.find((p) => String(p.id) === id)?.displayName || "them";
+        const note = await askNote(`Ask ${who} to take this chat?`, "They can accept or decline; you're told either way.");
+        if (note !== null) accessAction("ask", { userId: Number(id), note }, `Asked ${who}`);
+      } else if (kind === "u" || kind === "d") {
+        const label = kind === "u" ? people.find((p) => String(p.id) === id)?.displayName : `the ${DEPT_NAMES[id] || id} queue`;
+        const note = await askNote(`Transfer to ${label}?`, kind === "u" ? "They get the chat now, with an alert." : "Nobody holds it until someone in that department takes it; they get an alert.");
+        if (note === null) return;
+        if (kind === "u") accessAction("assign", { userId: Number(id), note }, `Transferred to ${label}`);
+        else accessAction("transfer", { department: id, note }, `Sent to ${label}`);
+      } else if (kind === "rel") {
+        accessAction("release", { to: id }, id === "ai" ? "The AI is answering this chat again" : "Released to the queue");
+      }
     });
-    bits.push(select);
+    actions.push(menu);
   }
-  // Ask a colleague (anyone): they accept or decline.
-  const askable = people.filter((p) => Number(p.id) !== me && !handoffs.some((r) => r.targetUserId === p.id));
-  if (askable.length && (holding || !floor)) {
-    const ask = h("select", { class: "hold-assign", "aria-label": "Ask a colleague to take this chat" },
-      h("option", { value: "", text: "Ask a colleague…" }), ...askable.map((p) => h("option", { value: String(p.id), text: personLabel(p) })));
-    ask.addEventListener("change", async () => {
-      const id = ask.value;
-      ask.value = "";
-      if (!id) return;
-      const who = askable.find((p) => String(p.id) === id)?.displayName || "them";
-      const note = await askNote(`Ask ${who} to take this chat?`, "They can accept or decline; you're told either way.");
-      if (note === null) return;
-      accessAction("ask", { userId: Number(id), note }, `Asked ${who}`);
-    });
-    bits.push(ask);
-  }
-  // Release (holder or floor): to the queue, or back to the AI.
-  if (contact.holderUserId && (holding || floor)) {
-    const release = h("select", { class: "hold-assign", "aria-label": "Release this chat" },
-      h("option", { value: "", text: "Release…" }),
-      h("option", { value: "queue", text: `To the ${dept || "team"} queue` }),
-      h("option", { value: "ai", text: "Back to the AI" }));
-    release.addEventListener("change", () => {
-      const to = release.value;
-      release.value = "";
-      if (to) accessAction("release", { to }, to === "ai" ? "The AI is answering this chat again" : "Released to the queue");
-    });
-    bits.push(release);
-  }
+  if (actions.length) bits.push(h("div", { class: "hold-actions" }, ...actions));
   const canDecide = holding || floor;
   for (const row of access) {
     if (!canDecide || row.requesterId === me) continue;
-    bits.push(h("div", { class: "hold-request" }, h("span", { text: `${row.requesterName} asks to take this chat.` }),
+    bits.push(h("div", { class: "hold-request" }, h("span", { text: `🙋 ${row.requesterName} asks to take this chat.` }),
       h("button", { type: "button", class: "btn btn-sm btn-primary", "data-access": "grant", "data-requester": String(row.requesterId), text: "Approve" }),
       h("button", { type: "button", class: "btn btn-sm", "data-access": "decline", "data-request": String(row.id), text: "Decline" })));
   }
   for (const row of handoffs) {
     if (row.targetUserId === me) {
-      bits.push(h("div", { class: "hold-request ask" }, h("span", { text: `${row.requesterName} asks you to take this chat${row.note ? `: “${row.note}”` : "."}` }),
+      bits.push(h("div", { class: "hold-request ask" }, h("span", { text: `🤝 ${row.requesterName} asks you to take this chat${row.note ? `: “${row.note}”` : "."}` }),
         h("button", { type: "button", class: "btn btn-sm btn-primary", "data-access": "accept", "data-request": String(row.id), text: "Accept" }),
         h("button", { type: "button", class: "btn btn-sm", "data-access": "refuse", "data-request": String(row.id), text: "Decline" })));
     } else if (row.requesterId === me) {
-      bits.push(h("span", { class: "muted", text: `Waiting for ${row.targetName} to answer.` }));
+      bits.push(h("div", { class: "hold-request wait" }, h("span", { text: `⏳ You asked ${row.targetName} to take this chat. Waiting for their answer.` })));
     }
   }
   bar.hidden = bits.length === 0;

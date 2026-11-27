@@ -1719,3 +1719,17 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .is-invalid, input.is-invalid, select.is-invalid, textarea.is-invalid { border-color: var(--danger) !important; box-shadow: 0 0 0 3px var(--danger-soft) !important; }
 .field-error { color: var(--danger-text); font-size: 12.5px; line-height: 1.35; margin: 4px 0 2px; font-weight: 500; }
 .field-error::before { content: "\26A0\FE0E  "; }
+
+/* Who is handling the chat: status on the left (icon, who, what it means for you), next step + "Hand off…" on the right. */
+.hold-bar { gap: 10px; padding: 10px 0 2px; }
+.hold-status { flex: 1 1 260px; min-width: 0; display: flex; align-items: center; gap: 10px; }
+.hold-status .hold-ic { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--panel-2, var(--line)); font-size: 14px; }
+.hold-status.mine .hold-ic { background: var(--ok-soft); color: var(--ok); font-weight: 700; }
+.hold-status.other .hold-ic { background: var(--accent-soft); }
+.hold-status.queue .hold-ic { background: var(--warn-soft, var(--accent-soft)); }
+.hold-status .hold-txt { display: flex; flex-direction: column; min-width: 0; }
+.hold-status .hold-txt strong { font-size: 13px; font-weight: 650; }
+.hold-status .hold-txt small { color: var(--muted); font-size: 12px; }
+.hold-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: none; }
+.hold-menu { min-width: 150px; font-weight: 600; }
+.hold-request.wait { background: var(--panel-2, var(--accent-soft)); }
