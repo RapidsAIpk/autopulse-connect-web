@@ -117,6 +117,7 @@ function storeActions(s) {
     { key: "details", label: "Edit store details" },
     { key: "controls", label: "Store controls (switch AI, channels, features on/off)" },
     { key: "billing", label: "Billing & payments" },
+    { key: "guide", label: "Download setup guide (PDF)", off: s.website ? "" : "This store has no website yet, so it has no chat code. Add the website first." },
     s.subscribed
       ? { key: "unsubscribe", label: "Unsubscribe (can't use Connect)", danger: true, off: s.billing?.mode === "stripe" && ["active", "trialing", "past_due"].includes(s.billing?.status) ? "This store pays by card. Cancel its subscription in Billing & payments." : "" }
       : { key: "subscribe", label: "Subscribe (can use Connect)" },
@@ -200,6 +201,7 @@ function actionsFor(s) {
     if (action === "password") changePassword(s);
     if (action === "delete") deleteStore(s);
     if (action === "billing") openStoreBilling(s);
+    if (action === "guide") downloadFile(`/api/admin/stores/${encodeURIComponent(s.id)}/setup-guide`, "AutoPulse-Setup-Guide.pdf", ctx.toast);
     if (action === "subscribe") setSubscribed(s, true);
     if (action === "unsubscribe") setSubscribed(s, false);
   });
@@ -595,5 +597,30 @@ async function uploadLogo(event, variant) {
     toast("Logo updated", "success");
   } catch (error) {
     toast(error.message, "error");
+  }
+}
+
+/** Downloads a file from the API with this tab's session (tab sessions send X-Session-Token, not the cookie). */
+async function downloadFile(url, fallbackName, toast) {
+  try {
+    const headers = {};
+    let token = "";
+    try { token = sessionStorage.getItem("autopulse.sessionToken") || ""; } catch {}
+    if (token) headers["X-Session-Token"] = token;
+    const res = await fetch(url, { credentials: "same-origin", headers });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || data.message || `Download failed (${res.status})`);
+    }
+    const name = /filename="([^"]+)"/.exec(res.headers.get("content-disposition") || "")?.[1] || fallbackName;
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  } catch (error) {
+    toast?.(error.message, "error");
   }
 }

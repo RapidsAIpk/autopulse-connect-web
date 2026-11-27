@@ -11,7 +11,7 @@ export type SiteView = {
 };
 
 export type MeReply = { user: MeUser; csrfToken: string; [k: string]: unknown };
-type AuthOptions = { google: boolean; signup: boolean };
+type AuthOptions = { google: boolean; linkedin?: boolean; signup: boolean };
 type LoginReply = { ok?: boolean; codeRequired?: boolean; challenge?: string; sentTo?: string };
 
 /** One API slice for the whole app; each screen adds its endpoints here as it is ported. */
