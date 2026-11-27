@@ -66,8 +66,9 @@ body.site-page {
 /* buttons */
 .site-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border-radius: 10px; font-weight: 650; font-size: 14.5px; border: 1px solid var(--line); background: var(--panel); color: var(--text); transition: transform .12s ease, box-shadow .12s ease, background .12s ease; white-space: nowrap; }
 .site-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1); }
-.site-btn-primary { background: var(--grad); color: #fff; border-color: transparent; }
-.site-btn-light { background: #fff; color: #0f172a; border-color: transparent; }
+/* ("a" inside the page inherits its colour: buttons say theirs with a stronger rule) */
+.site-page .site-btn-primary { background: var(--grad); color: #fff; border-color: transparent; }
+.site-page .site-btn-light { background: #fff; color: #0f172a; border-color: transparent; }
 .site-btn-lg { padding: 13px 22px; font-size: 15.5px; border-radius: 12px; }
 .site-btn-block { width: 100%; margin-top: auto; }
 .site-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
