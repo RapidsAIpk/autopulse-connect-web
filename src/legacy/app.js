@@ -639,6 +639,28 @@ async function eraseCustomerFlow(phone) {
 }
 const isSuperAdmin = () => accountKind() === "superadmin" && !state.impersonatedBy;
 
+/**
+ * Store controls: what AutoPulse switched off for this store, on the Dashboard and the Inbox. The dealer's team
+ * learns why something is missing; an AutoPulse admin viewing the store sees it at a glance and where to change it.
+ */
+function renderRestrictions(items) {
+  const admin = isSuperAdmin();
+  for (const viewId of ["view-dashboard", "view-inbox"]) {
+    const view = $(viewId);
+    if (!view) continue;
+    let bar = view.querySelector(":scope > .restrictions-bar");
+    if (!items.length) { if (bar) bar.hidden = true; continue; }
+    if (!bar) { bar = h("div", { class: "restrictions-bar", role: "status" }); view.prepend(bar); }
+    bar.hidden = false;
+    bar.replaceChildren(
+      h("span", { class: "restrictions-ic", "aria-hidden": "true", text: "⚠" }),
+      h("div", { class: "restrictions-txt" },
+        h("strong", { text: admin ? "Switched off for this store by AutoPulse" : "AutoPulse has switched some things off for your dealership" }),
+        h("ul", {}, ...items.map((r) => h("li", { text: r.text }))),
+        h("small", { text: admin ? "Change it in Stores → Actions → Store controls (or Subscribe)." : "Contact AutoPulse (contact@autopulse.ai) to turn them back on." })));
+  }
+}
+
 function syncDealershipChrome() {
   const select = $("dealership-switch");
   const viewing = select?.closest(".dealer-switch");
@@ -3515,6 +3537,17 @@ async function init() {
   state.featuresOff = caps.featuresOff || [];
   document.body.dataset.featuresOff = state.featuresOff.join(" ");
   renderAiPlatforms();
+  renderRestrictions(caps.restrictions || []);
+  // Another store picked in "Viewing": show that store's restrictions.
+  document.addEventListener("dealership:switched", async () => {
+    const next = await api("/api/platforms").catch(() => null);
+    if (!next) return;
+    state.aiOff = next.aiOff || [];
+    state.featuresOff = next.featuresOff || [];
+    document.body.dataset.featuresOff = state.featuresOff.join(" ");
+    renderAiPlatforms();
+    renderRestrictions(next.restrictions || []);
+  });
   for (const ch of caps.channelsOff || []) { const tab = document.querySelector(`.channel-bar .tab[data-channel="${ch}"]`); if (tab) tab.hidden = true; }
   state.roomsSupported = Boolean(state.metaGroupsSupported || (caps.platforms?.twilio?.groups && state.broadcast));
   syncChannelControls();
