@@ -410,6 +410,15 @@ function openMember(member) {
   const offered = data.departments.filter((d) => data.storeDepartments.includes(d.id) || member?.departments.includes(d.id));
   checks($("member-departments"), offered, member?.departments || [], "departments");
   checks($("member-stores"), data.stores, member?.stores || (data.stores.length === 1 ? [data.stores[0].id] : []), "stores");
+  // CRM person with Connect-only changes: one click back to what AutoPulse CRM says.
+  let reset = document.getElementById("member-crm-reset");
+  if (!reset) {
+    reset = ctx.h("button", { type: "button", id: "member-crm-reset", class: "btn", text: "Use AutoPulse CRM settings" });
+    reset.addEventListener("click", resetToCrm);
+    $("member-submit").before(reset);
+  }
+  reset.hidden = !(data.crm && member && (member.roleSetInConnect || member.departmentsSetInConnect));
+  reset.dataset.tip = "Role and departments go back to what AutoPulse CRM says";
   $("member-stores-set").hidden = Boolean(data.crm) || (data.stores.length < 2 && !member);
   $("member-access-set").hidden = Boolean(member) || Boolean(data.crm);
   paintMethod();
@@ -455,6 +464,19 @@ async function saveMember(event) {
         toast(`Invite e-mailed to ${result.member.email}`, "success");
       }
     }
+    loadTeam();
+  } catch (error) {
+    showErr("member-error", error.message);
+  }
+}
+
+async function resetToCrm() {
+  const { $, api, toast } = ctx;
+  if (!editing) return;
+  try {
+    await api(`/api/team/${editing.id}`, { method: "PATCH", body: { role: null, departments: null } });
+    $("member-dialog").close();
+    toast(`${editing.name} follows AutoPulse CRM again`, "success");
     loadTeam();
   } catch (error) {
     showErr("member-error", error.message);
