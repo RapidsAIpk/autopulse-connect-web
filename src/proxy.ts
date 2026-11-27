@@ -18,13 +18,14 @@ async function signedIn(request: NextRequest): Promise<boolean | null> {
   }
 }
 
-// Old routes: GET / without a session → /login; GET /login with a session → /.
+// The dashboard lives at /admin (the public website is at /, as on the old chatbot app).
+// GET /admin without a session → /login; GET /login with a session → /admin.
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const live = await signedIn(request);
-  if (pathname === "/" && live === false) return NextResponse.redirect(new URL("/login", request.url));
-  if (pathname === "/login" && live === true) return NextResponse.redirect(new URL("/", request.url));
+  if (pathname === "/admin" && live === false) return NextResponse.redirect(new URL("/login", request.url));
+  if (pathname === "/login" && live === true) return NextResponse.redirect(new URL("/admin", request.url));
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/", "/login"] };
+export const config = { matcher: ["/admin", "/login"] };
