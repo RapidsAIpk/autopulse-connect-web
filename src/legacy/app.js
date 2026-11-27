@@ -8,6 +8,7 @@ import { EMOJI_CATS, emojiKeywords, searchEmojis } from "./emoji.js";
 import { initAccount, loadAccountPanel, loadEnquiries, loadStorePanel, loadWidgetPanel, paintMeAvatar } from "./profile.js";
 import { initStores, loadMessaging, loadOutbound, loadSite, loadStores, showImpersonation } from "./stores.js";
 import { billingTabFor, handlePausedReturn, initBilling, loadBillingAdmin, loadBillingPanel, paintPausedBilling } from "./billing.js";
+import { initSignin, loadSignin } from "./signin.js";
 import { applyStoreKind, initTeam, loadAiProfile, loadMyPage, loadStorePage, loadStoreSettings, loadTeam } from "./team.js";
 import { initStock, loadStockPanel } from "./stock.js";
 import { initStart, loadStart } from "./start.js";
@@ -519,6 +520,7 @@ function showView(view) {
     loadFacebookPage().then(() => paintSettingsTabs());
     loadBillingPanel();
     loadBillingAdmin();
+    loadSignin();
   }
   if (view === "leads") {
     clearLeadsBadge();
@@ -3629,6 +3631,7 @@ async function init() {
   setupRail();
   initAccount({ $, h, api, toast, state });
   initStores({ $, h, api, toast, state, confirmDialog });
+  initSignin({ $, h, api, toast, state, confirmDialog });
   initBilling({ $, h, api, toast, state, confirmDialog, showDealerTab: billingTabFor(me), onStoreBillingClosed: () => { if (state.view === "stores") loadStores(); },
     openBillingTab: () => { showView("settings"); setTimeout(() => document.querySelector('#settings-tabs [data-stab="billing"]')?.click(), 300); } });
   initTeam({ $, h, api, toast, state, confirmDialog, refreshTabs: () => paintSettingsTabs($("settings-grid")?.dataset.active) });
