@@ -47,16 +47,26 @@ export async function loadStockPanel() {
     b.setAttribute("aria-checked", String(b.dataset.mode === data.mode));
     b.disabled = !data.canEdit;
   }
-  $("stock-own").hidden = data.mode !== "own";
+  // AutoPulse CRM dealers: always their AutoPulse feed, plus any cars added here (no feed/own switch).
+  const both = data.mode === "both";
+  $("stock-mode").hidden = both;
+  const intro = $("stock-intro");
+  if (intro && !intro.dataset.feedText) intro.dataset.feedText = intro.textContent;
+  if (intro) {
+    intro.textContent = both
+      ? "AutoPulse feed + your own cars. Cars from the AutoPulse feed come in by themselves (read-only). Add cars here that are not in the feed: they show together with the feed cars in the website chat, AI replies, car pages and Vehicles. Use Mark sold when one is sold."
+      : intro.dataset.feedText;
+  }
+  $("stock-own").hidden = !["own", "both"].includes(data.mode);
   for (const id of ["stock-add", "stock-import-label"]) $(id).hidden = !data.canEdit;
-  $("stock-counts").textContent = `${data.counts.active} for sale · ${data.counts.sold} sold`;
+  $("stock-counts").textContent = `${both ? "Your own cars: " : ""}${data.counts.active} for sale · ${data.counts.sold} sold`;
   paintTable();
 }
 
 function paintTable() {
   const { $, h } = ctx;
   if (!data.items.length) {
-    $("stock-body").replaceChildren(h("tr", {}, h("td", { colspan: "7", class: "muted", text: data.counts.active + data.counts.sold ? "No cars match." : "No cars yet. Add your first car, or import a CSV in the AutoPulse feed's columns." })));
+    $("stock-body").replaceChildren(h("tr", {}, h("td", { colspan: "7", class: "muted", text: data.counts.active + data.counts.sold ? "No cars match." : (data.mode === "both" ? "No cars of your own yet. The feed's cars are listed below; add a car here that is not in the feed, or import a CSV." : "No cars yet. Add your first car, or import a CSV in the AutoPulse feed's columns.") })));
     return;
   }
   $("stock-body").replaceChildren(...data.items.map((v) => {

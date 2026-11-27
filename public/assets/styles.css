@@ -1536,7 +1536,7 @@ body[data-view="visitors"] { --page-c: var(--c-rose); }
 .vis-export summary { list-style: none; }
 .vis-export summary::-webkit-details-marker { display: none; }
 .vis-export summary::after { content: " ▾"; }
-.vis-export-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; display: grid; gap: 6px; padding: 8px; min-width: 190px;
+.vis-export-menu { position: absolute; left: 0; right: auto; top: calc(100% + 4px); z-index: 20; display: grid; gap: 6px; padding: 8px; min-width: 190px;
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 12px 30px rgba(0,0,0,.25); }
 .vis-cars { display: grid; gap: 8px; }
 .vis-car { display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 10px;
@@ -1704,3 +1704,6 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 
 /* Inbox users: the role picker must show the whole role name. */
 .role-pick { min-width: 150px; }
+
+/* A row action that does not apply (e.g. Open chat for a booking made outside a chat): greyed out, still explains itself. */
+.icon-btn.is-disabled, .icon-btn:disabled { opacity: .35; cursor: not-allowed; }
