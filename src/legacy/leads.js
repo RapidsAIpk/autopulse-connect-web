@@ -89,6 +89,14 @@ function actionButtons(...buttons) {
   return ui.h("td", { class: "records-actions" }, ...buttons.filter(Boolean));
 }
 
+/** "Open chat" when there is a chat; otherwise the same button, greyed out, saying why (never just missing). */
+function chatButton(chatKey, what) {
+  if (chatKey) return iconButton("Open chat", CHAT, () => openChat(chatKey));
+  const b = iconButton(`No chat: this ${what} was not made in a chat`, CHAT, null, "is-disabled");
+  b.disabled = true;
+  return b;
+}
+
 function iconButton(label, path, onclick, extra = "") {
   const { h } = ui;
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -334,7 +342,7 @@ function paintLeads(t, data) {
     h("td", { text: day(lead.createdAt) }),
     actionButtons(
       iconButton("View lead", EYE, () => viewLead(lead.id)),
-      lead.chatKey ? iconButton("Open chat", CHAT, () => openChat(lead.chatKey)) : null,
+      chatButton(lead.chatKey, "lead"),
       t.admin ? iconButton("Delete lead", BIN, () => confirmDelete("lead", `/api/leads/${lead.id}`, t), "danger") : null,
       lead.chatKey && ui.isSuperAdmin?.() ? iconButton("Delete all of this customer's data", ERASE_PERSON, async () => { if (await ui.eraseCustomer(lead.chatKey)) reload(t); }, "danger erase") : null,
     ),
@@ -422,7 +430,7 @@ function paintAppointments(t, data) {
     h("td", { text: day(appt.createdAt) }),
     actionButtons(
       iconButton("View appointment", EYE, () => viewAppointment(appt)),
-      appt.chatKey ? iconButton("Open chat", CHAT, () => openChat(appt.chatKey)) : null,
+      chatButton(appt.chatKey, "booking"),
       t.admin ? iconButton("Delete appointment", BIN, () => confirmDelete("appointment", `/api/appointments/${appt.id}`, t), "danger") : null,
     ),
   )) : [emptyRow(columns.length, "No appointments yet. Book a visit from any chat with “Book visit”.")]));
@@ -744,7 +752,7 @@ async function loadDashboard() {
       h("td", {}, unlistedBadge(l.vehicleUnlistedAt) || h("span", { class: "muted", text: money(l.price) || "" })),
       actionButtons(
         iconButton("View lead", EYE, () => viewLead(l.id)),
-        l.chatKey ? iconButton("Open chat", CHAT, () => openChat(l.chatKey)) : null,
+        chatButton(l.chatKey, "lead"),
       ),
     )) : [emptyRow(7, "No leads yet.")]));
     const ov = data.overview;
