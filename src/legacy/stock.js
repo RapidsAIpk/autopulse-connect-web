@@ -15,6 +15,8 @@ export function initStock(deps) {
   ctx = deps;
   const { $ } = ctx;
   $("stock-mode")?.addEventListener("click", (e) => { const b = e.target.closest("[data-mode]"); if (b) setMode(b.dataset.mode); });
+  // Another store chosen in Viewing: never show (or act on) the previous store's inventory panel.
+  document.addEventListener("dealership:switched", () => { data = null; if ($("stock-panel")) $("stock-panel").hidden = true; });
   $("stock-q")?.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(loadStockPanel, 300); });
   $("stock-status")?.addEventListener("change", loadStockPanel);
   $("stock-add")?.addEventListener("click", () => openCar(null));
@@ -88,7 +90,7 @@ function paintTable() {
 
 async function setMode(mode) {
   const { api, toast, confirmDialog } = ctx;
-  if (!data || mode === data.mode) return;
+  if (!data || data.mode === "both" || mode === data.mode) return;
   const text = mode === "own"
     ? "The website chat, AI replies, car pages and Vehicles will use the cars you add here instead of the AutoPulse feed."
     : "This store goes back to the AutoPulse feed. Your own cars are kept, but not shown, until you switch back.";

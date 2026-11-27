@@ -497,7 +497,8 @@ function showView(view) {
   }
   if (view === "appointments") loadAppointmentsView();
   if (view === "conversations") loadConversationsView();
-  if (view === "vehicles") { loadVehiclesView(); if (state.store?.inboxOnly) loadStockPanel(); }
+  // The Inventory panel asks the server which kind it is for this store (own / feed / CRM dealer: feed + own cars).
+  if (view === "vehicles") { loadVehiclesView(); loadStockPanel(); }
   if (view === "chatwidget") { loadWidgetPanel(); loadPopups(); loadTrackingPanel(); }
   if (view === "visitors") loadVisitorsView();
   if (view === "store") { loadStorePanel(); loadAccountPanel(); loadSettings(); if (state.store?.inboxOnly) loadAiProfile(); }
