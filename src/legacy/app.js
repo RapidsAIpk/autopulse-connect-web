@@ -644,7 +644,7 @@ const isSuperAdmin = () => accountKind() === "superadmin" && !state.impersonated
  * learns why something is missing; an AutoPulse admin viewing the store sees it at a glance and where to change it.
  */
 function renderRestrictions(items) {
-  const admin = isSuperAdmin();
+  const admin = Boolean(state.restrictionsAdmin);
   for (const viewId of ["view-dashboard", "view-inbox"]) {
     const view = $(viewId);
     if (!view) continue;
@@ -3537,6 +3537,8 @@ async function init() {
   state.featuresOff = caps.featuresOff || [];
   document.body.dataset.featuresOff = state.featuresOff.join(" ");
   renderAiPlatforms();
+  // An AutoPulse admin (not logged in as a dealer) sees where to change it; known here before state.me is set.
+  state.restrictionsAdmin = me.user?.role === "admin" && !me.impersonatedBy;
   renderRestrictions(caps.restrictions || []);
   // Another store picked in "Viewing": show that store's restrictions.
   document.addEventListener("dealership:switched", async () => {
