@@ -121,6 +121,8 @@ async function apiOnce(path, { method = "GET", body } = {}) {
     const error = new Error(data.error || `Request failed (${res.status})`);
     if (res.status === 400 && data.field) markServerField(data); // mark the wrong field on the form just sent
     if (res.status === 403 && /csrf/i.test(String(data.error || ""))) error.csrf = true;
+    // The store was unsubscribed or paused while this page was open: reload to show why (once per page).
+    if (res.status === 403 && ["unsubscribed", "store_paused"].includes(data.code) && !state.blockedReload) { state.blockedReload = true; location.reload(); }
     throw error;
   }
   if (Object.prototype.hasOwnProperty.call(data, "sessionToken")) {
@@ -3479,9 +3481,9 @@ async function init() {
   // Store controls: AutoPulse paused this dealership's sign-in. Show why, with Sign out, instead of the inbox.
   if (me.paused) {
     document.body.append(h("div", { class: "paused-screen" }, h("div", { class: "paused-card" },
-      h("h2", { text: me.pausedReason === "crm_only" ? "Not using Connect yet" : "Access paused" }),
-      h("p", { class: "muted", text: me.pausedReason === "crm_only"
-        ? "Your dealership uses AutoPulse CRM but not AutoPulse Connect yet. Ask AutoPulse to turn it on."
+      h("h2", { text: me.pausedReason === "unsubscribed" ? "Not subscribed" : "Access paused" }),
+      h("p", { class: "muted", text: me.pausedReason === "unsubscribed"
+        ? "Your dealership isn't subscribed to AutoPulse Connect, so the inbox and website chat are off. Nothing has been deleted. Please contact AutoPulse to subscribe."
         : "AutoPulse has paused access to this dealership for now. Nothing has been deleted. Please contact AutoPulse." }),
       h("a", { class: "btn", href: "mailto:contact@autopulse.ai", text: "contact@autopulse.ai" }),
       h("button", { type: "button", class: "btn btn-primary", onclick: async () => { try { await api("/api/auth/logout", { method: "POST" }); } catch {} location.replace("/login"); } }, "Sign out"))));
