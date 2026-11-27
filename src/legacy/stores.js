@@ -11,7 +11,7 @@ const TYPE_CLASS = { connect: "src-twilio", crm_connect: "src-website", crm_only
 const TYPE_TIP = {
   connect: "Lives only in AutoPulse Connect. Its owner and team sign in here.",
   crm_connect: "An AutoPulse CRM dealer that also uses Connect. Its staff sign in with their CRM login.",
-  crm_only: "An AutoPulse CRM dealer that doesn't use Connect. Its staff can't sign in here; you can still open it. Turn Connect on in Actions.",
+  crm_only: "An AutoPulse CRM dealer that isn't subscribed to Connect. Its staff can't sign in here; you can still open it. Subscribe it in Actions.",
 };
 
 export function initStores(deps) {
@@ -87,9 +87,13 @@ export async function loadStores() {
     h("td", { text: s.contactName || "—" }),
     h("td", {}, s.email ? h("a", { href: `mailto:${s.email}`, text: s.email }) : "—"),
     h("td", { text: s.phone || "—" }),
-    h("td", {}, s.subscription
-      ? h("span", { class: `tag ${s.subscription.status === "Subscribed" ? "known" : "tag-warn"}`, text: s.subscription.status, "data-tip": [s.subscription.type, s.subscription.price != null ? `$${s.subscription.price}` : "", "from the chatbot app"].filter(Boolean).join(" · ") })
-      : h("span", { class: "muted", text: "—" })),
+    h("td", {}, h("span", {
+      class: `tag ${s.subscribed ? "known" : "tag-warn"}`,
+      text: s.subscribed ? "Subscribed" : "Unsubscribed",
+      "data-tip": s.subscribed
+        ? `Can use AutoPulse Connect${s.subscription?.since ? ` · since ${new Date(s.subscription.since).toLocaleDateString()}` : ""}`
+        : "Can't use AutoPulse Connect: no sign-in for the dealer's team, website chat off. Subscribe in Actions.",
+    })),
     h("td", { text: String(s.leads) }),
     h("td", {}, actionsFor(s)),
   )) : [h("tr", {}, h("td", { colspan: "9", class: "muted records-empty", text: "No stores match these filters." }))]));
@@ -103,32 +107,33 @@ export async function loadStores() {
  * (A native <select> cannot show a reason on one option, so this is a small menu of buttons.)
  */
 function storeActions(s) {
-  // Same rules as the server. CRM-only dealers: admins can open them, but no one signs in until Connect is on.
-  const crm = s.kind === "crm", crmOnly = s.type === "crm_only", hasOwner = Boolean(s.owner);
+  // Same rules as the server. Unsubscribed stores: admins can still open them and log in as them; the dealer can't.
+  const crm = s.kind === "crm", hasOwner = Boolean(s.owner);
   const ownerOff = s.owner?.disabled ? "This dealer account is turned off, so no one can sign in as them." : "";
   const noAccount = "No one signs in to this store: it has no owner account. Use 'Open store in new tab'.";
   return [
     { key: "open", label: "Open store in new tab" },
     { key: "details", label: "Edit store details" },
     { key: "controls", label: "Store controls (switch chat, AI, sign-in, tracking)", off: s.website ? "" : "Add the store's website first (Edit store details)." },
-    crm
-      ? { key: crmOnly ? "connect-on" : "connect-off", label: crmOnly ? "Turn Connect on" : "Turn Connect off (CRM only)" }
-      : { key: "connect-on", label: "Turn Connect on", off: "Connect dealers always use Connect." },
-    { key: "login", label: "Log in as dealer", off: crm ? (crmOnly ? "This dealer is CRM only. Turn Connect on first." : "") : !hasOwner ? noAccount : ownerOff },
+    s.subscribed
+      ? { key: "unsubscribe", label: "Unsubscribe (can't use Connect)", danger: true }
+      : { key: "subscribe", label: "Subscribe (can use Connect)" },
+    { key: "login", label: "Log in as dealer", off: crm ? "" : !hasOwner ? noAccount : ownerOff },
     { key: "password", label: "Change password", off: crm ? "AutoPulse CRM dealers change their password in AutoPulse CRM." : hasOwner ? "" : noAccount },
     { key: "delete", label: "Delete store", danger: true, off: crm ? "AutoPulse CRM dealers are removed in AutoPulse CRM. Use Store controls to pause sign-in or chat." : s.test ? "Test stores are kept for testing and cannot be deleted." : "" },
   ];
 }
 
-async function setConnect(s, on) {
+async function setSubscribed(s, on) {
   const { api, toast, confirmDialog } = ctx;
+  const crm = s.kind === "crm";
   const ok = await confirmDialog(on
-    ? { title: `Turn Connect on for ${s.name}?`, text: "It becomes 'CRM & Connect': its staff can sign in to AutoPulse Connect with their AutoPulse CRM login.", okLabel: "Turn Connect on" }
-    : { title: `Make ${s.name} CRM only?`, text: "Its staff are signed out of AutoPulse Connect now and can't sign in again until you turn Connect back on. Its chats and leads stay; you can still open it.", okLabel: "Make CRM only" });
+    ? { title: `Subscribe ${s.name}?`, text: `It can use AutoPulse Connect: ${crm ? "its staff sign in with their AutoPulse CRM login" : "its owner and team can sign in"}, and its website chat works.`, okLabel: "Subscribe" }
+    : { title: `Unsubscribe ${s.name}?`, text: `It can't use AutoPulse Connect: ${crm ? "its staff are signed out now" : "its owner and team are stopped"}, and its website chat shows 'Chat is not available'. Its chats and leads stay; you can still open it.`, okLabel: "Unsubscribe" });
   if (!ok) return;
   try {
-    const r = await api(`/api/admin/stores/${encodeURIComponent(s.id)}/connect`, { method: "POST", body: { on } });
-    toast(on ? `${s.name} now uses Connect` : `${s.name} is CRM only${r.signedOut ? ` · ${r.signedOut} signed out` : ""}`, "success");
+    const r = await api(`/api/admin/stores/${encodeURIComponent(s.id)}/subscription`, { method: "POST", body: { subscribed: on } });
+    toast(on ? `${s.name} is subscribed` : `${s.name} is unsubscribed${r.signedOut ? ` · ${r.signedOut} signed out` : ""}`, "success");
     loadStores();
   } catch (error) {
     toast(error.message, "error");
@@ -176,8 +181,8 @@ function actionsFor(s) {
     if (action === "login") loginAs(s);
     if (action === "password") changePassword(s);
     if (action === "delete") deleteStore(s);
-    if (action === "connect-on") setConnect(s, true);
-    if (action === "connect-off") setConnect(s, false);
+    if (action === "subscribe") setSubscribed(s, true);
+    if (action === "unsubscribe") setSubscribed(s, false);
   });
   return box;
 }

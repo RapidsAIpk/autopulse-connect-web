@@ -20,7 +20,7 @@ const NOTICES: Record<string, ["notice" | "error", string]> = {
   expired: ["error", "That confirmation link has expired or was already used. Sign in to get a new one."],
   google: ["error", "Google sign-in did not finish. Try again, or use your e-mail and password."],
   disabled: ["error", "This account is turned off. Contact your administrator."],
-  notconnected: ["error", "Your dealership doesn't use AutoPulse Connect yet. Ask AutoPulse to turn it on."],
+  notconnected: ["error", "Your dealership isn't subscribed to AutoPulse Connect. Please contact AutoPulse."],
 };
 
 function noticeFrom(params: URLSearchParams): ["notice" | "error", string] | null {
