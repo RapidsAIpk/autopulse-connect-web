@@ -74,18 +74,24 @@ export async function handlePausedReturn({ api, toast }) {
 }
 
 // ---------- shared bits ----------
+// "until 2026-12-04" → "until 4 Dec 2026" (the server keeps dates as YYYY-MM-DD).
+const niceDates = (text) => String(text || "").replace(/\b(\d{4}-\d{2}-\d{2})\b/g, (d) => ymd(d));
+
 function statusTag(b) {
   const { h } = ctx;
-  return h("span", { class: `tag ${STATUS_CLASS[b.access?.on ? "active" : b.status] || "tag-warn"}`, text: b.access?.on ? (b.status === "trialing" ? "Free trial" : b.status === "past_due" ? "Payment failed" : "Active") : b.statusLabel || "Not subscribed", "data-tip": b.access?.why || "" });
+  const warn = b.status === "past_due" || b.cancelAtPeriodEnd || !b.access?.on;
+  const text = b.access?.on ? (b.status === "trialing" ? "Free trial" : b.status === "past_due" ? "Payment failed" : b.cancelAtPeriodEnd ? "Ending" : "Active") : b.statusLabel || "Not subscribed";
+  return h("span", { class: `tag ${warn ? "tag-warn" : STATUS_CLASS[b.status] || "known"}`, text, "data-tip": niceDates(b.access?.why) });
 }
 
 function summary(b, { admin = false } = {}) {
   const { h } = ctx;
   const rows = [];
   const kv = (k, v) => (v ? rows.push(h("div", { class: "kv" }, h("span", { class: "muted", text: k }), h("strong", { text: v }))) : null);
-  kv("Status", b.access?.why || b.statusLabel);
+  kv("Status", niceDates(b.access?.why || b.statusLabel));
   kv("How", b.mode === "stripe" ? "Card (Stripe)" : b.mode === "manual" ? "Set by AutoPulse" : b.subscribed ? "Set by AutoPulse" : "");
-  kv("Plan", b.plan ? `${b.plan.name} · ${b.plan.price} ${b.plan.every}` : b.price ? `${b.price} ${b.every}` : "");
+  if (b.plan) kv("Plan", `${b.plan.name} · ${b.plan.price} ${b.plan.every}`);
+  if (b.price && (!b.plan || b.priceCents !== b.plan.priceCents)) kv(b.plan ? "Price" : "Price", `${b.price} ${b.every}`);
   if (b.mode === "stripe") kv(b.cancelAtPeriodEnd ? "Ends on" : "Paid until", day(b.paidUntil));
   if (b.mode === "manual") kv("Paid until", b.endsOn ? ymd(b.endsOn) : "No end date");
   if (b.trialEndsOn) kv("Free trial until", ymd(b.trialEndsOn));
@@ -373,13 +379,13 @@ function plansSection(plans, stripe) {
   if (plans.length) {
     const editSlot = h("div");
     box.append(h("div", { class: "table-wrap" }, h("table", { class: "table records-table billing-table" },
-      h("thead", {}, h("tr", {}, ...["Plan", "Price", "Free trial", "Stripe", "Shown to dealers", ""].map((t) => h("th", { text: t })))),
+      h("thead", {}, h("tr", {}, ...["Plan", "Price", "Free trial", "Stripe", "Shown", ""].map((t) => h("th", { text: t })))),
       h("tbody", {}, ...plans.map((p) => h("tr", {},
         h("td", {}, h("strong", { text: p.name }), p.description ? h("div", { class: "hint", text: p.description }) : null),
         h("td", { text: `${p.price} ${p.every}` }),
         h("td", { text: p.trialDays ? `${p.trialDays} days` : "—" }),
         h("td", {}, h("span", { class: `tag ${p.mode === current ? "known" : "tag-warn"}`, text: p.mode === "live" ? "Live" : "Test", "data-tip": p.mode === current ? "Made in the Stripe mode in use now" : "Made in the other Stripe mode: dealers don't see it now" })),
-        h("td", { text: p.active && p.mode === current ? "Yes" : "No" }),
+        h("td", { text: p.active && p.mode === current ? "Yes" : "No", "data-tip": "Shown to dealers on their Billing tab" }),
         h("td", {},
           h("button", { type: "button", class: "btn btn-sm", text: "Edit", onclick: () => editSlot.replaceChildren(h("h4", { class: "ai-channel-title", text: `Edit ${p.name}` }), planForm(p, (changed) => { editSlot.replaceChildren(); if (changed) loadBillingAdmin(); })) }),
           h("button", { type: "button", class: "btn btn-sm", text: p.active ? "Hide" : "Show", onclick: async () => {
