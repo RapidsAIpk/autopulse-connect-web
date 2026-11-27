@@ -110,6 +110,8 @@ function storeActions(s) {
 
 function closeRowMenus(except) {
   for (const d of document.querySelectorAll("details.row-actions[open]")) if (d !== except) d.open = false;
+  // A menu whose row was redrawn while it was open has nothing to go back to.
+  for (const m of document.querySelectorAll("body > .row-actions-menu")) if (!m.owner?.isConnected) m.remove();
 }
 
 function actionsFor(s) {
@@ -122,9 +124,12 @@ function actionsFor(s) {
   }));
   const box = h("details", { class: "row-actions" },
     h("summary", { class: "btn row-actions-btn", "aria-label": `Actions for ${s.name}`, "data-tip": "What to do with this store", text: "Actions" }), list);
+  list.owner = box;
   box.addEventListener("toggle", () => {
-    if (!box.open) return;
+    if (!box.open) { box.append(list); return; }
     closeRowMenus(box);
+    // Lifted out of the table while open: the sticky Actions column would otherwise paint over it.
+    document.body.append(list);
     // Fixed position so the table's scroll box never cuts it off; open upwards near the bottom of the window.
     const r = box.querySelector("summary").getBoundingClientRect();
     list.style.top = list.style.bottom = "";
@@ -149,7 +154,7 @@ function actionsFor(s) {
 }
 
 // Close an open Actions menu on an outside click, Escape, or when the page scrolls under it.
-document.addEventListener("click", (e) => { if (!e.target.closest?.("details.row-actions")) closeRowMenus(); });
+document.addEventListener("click", (e) => { if (!e.target.closest?.("details.row-actions, .row-actions-menu")) closeRowMenus(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeRowMenus(); });
 addEventListener("scroll", () => closeRowMenus(), true);
 
