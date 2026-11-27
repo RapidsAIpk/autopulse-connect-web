@@ -1745,3 +1745,4 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .row-actions-item.danger { color: var(--danger); }
 .row-actions-item.is-disabled { opacity: .45; cursor: not-allowed; }
 .row-actions-item.is-disabled:hover { background: transparent; }
+.type-test { margin-left: 6px; }

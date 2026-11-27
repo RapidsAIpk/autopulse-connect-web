@@ -3479,8 +3479,10 @@ async function init() {
   // Store controls: AutoPulse paused this dealership's sign-in. Show why, with Sign out, instead of the inbox.
   if (me.paused) {
     document.body.append(h("div", { class: "paused-screen" }, h("div", { class: "paused-card" },
-      h("h2", { text: "Access paused" }),
-      h("p", { class: "muted", text: "AutoPulse has paused access to this dealership for now. Nothing has been deleted. Please contact AutoPulse." }),
+      h("h2", { text: me.pausedReason === "crm_only" ? "Not using Connect yet" : "Access paused" }),
+      h("p", { class: "muted", text: me.pausedReason === "crm_only"
+        ? "Your dealership uses AutoPulse CRM but not AutoPulse Connect yet. Ask AutoPulse to turn it on."
+        : "AutoPulse has paused access to this dealership for now. Nothing has been deleted. Please contact AutoPulse." }),
       h("a", { class: "btn", href: "mailto:contact@autopulse.ai", text: "contact@autopulse.ai" }),
       h("button", { type: "button", class: "btn btn-primary", onclick: async () => { try { await api("/api/auth/logout", { method: "POST" }); } catch {} location.replace("/login"); } }, "Sign out"))));
     return;
