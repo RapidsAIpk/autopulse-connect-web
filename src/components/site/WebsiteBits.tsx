@@ -10,7 +10,13 @@ const APP_HASH = /^#(login-as|open-store|billing|view|chat|find)=/;
 
 export function HashForward() {
   useEffect(() => {
-    if (APP_HASH.test(window.location.hash)) window.location.replace(`/admin${window.location.hash}`);
+    const go = () => {
+      if (APP_HASH.test(window.location.hash)) window.location.replace(`/admin${window.location.hash}`);
+    };
+    go();
+    // A link to /#… opened while the website is already showing only changes the hash.
+    window.addEventListener("hashchange", go);
+    return () => window.removeEventListener("hashchange", go);
   }, []);
   return null;
 }
