@@ -1712,5 +1712,5 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .stock-sources { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .stock-sources .stock-src { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; cursor: pointer; }
 .stock-sources .stock-src:has(input:disabled) { cursor: default; opacity: .8; }
-.own-tag { margin-left: 8px; vertical-align: 1px; }
+.own-tag { margin-right: 8px; vertical-align: 1px; }
 .stock-sold-title { margin: 14px 0 6px; font-size: 14px; }
