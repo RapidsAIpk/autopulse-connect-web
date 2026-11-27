@@ -14,7 +14,6 @@ const FIELDS = ["vin", "year", "make", "model", "trim", "bodyType", "condition",
 export function initStock(deps) {
   ctx = deps;
   const { $ } = ctx;
-  $("stock-mode")?.addEventListener("click", (e) => { const b = e.target.closest("[data-mode]"); if (b) setMode(b.dataset.mode); });
   // Another store chosen in Viewing: never show (or act on) the previous store's inventory panel.
   document.addEventListener("dealership:switched", () => { data = null; if ($("stock-panel")) $("stock-panel").hidden = true; });
   $("stock-q")?.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(loadStockPanel, 300); });
@@ -34,75 +33,121 @@ function showErr(message) {
   node.hidden = !message;
 }
 
-/** Vehicles view: shows the panel only for stores that can keep their own inventory. */
+/**
+ * Vehicles view, one design for every store. The panel says where the cars come from (tick boxes: the AutoPulse
+ * feed, My own cars, or both; AutoPulse CRM dealers always keep the feed) and holds Add car / Import / Export.
+ * Every car, feed or own, is listed once, in the Vehicles table below (own cars there have Edit / Mark sold /
+ * Delete). Only sold own cars are listed in the panel, to relist or delete them.
+ */
 export async function loadStockPanel() {
   const { $, api } = ctx;
-  const q = new URLSearchParams({ q: $("stock-q").value.trim(), status: $("stock-status").value });
   try {
-    data = await api(`/api/stock?${q}`);
+    data = await api("/api/stock?status=sold");
   } catch {
     $("stock-panel").hidden = true;
     return;
   }
   $("stock-panel").hidden = false;
-  for (const b of $("stock-mode").querySelectorAll("[data-mode]")) {
-    b.setAttribute("aria-checked", String(b.dataset.mode === data.mode));
-    b.disabled = !data.canEdit;
-  }
-  // AutoPulse CRM dealers: always their AutoPulse feed, plus any cars added here (no feed/own switch).
-  const both = data.mode === "both";
-  $("stock-mode").hidden = both;
+  paintSources();
+  const src = data.sources || { feed: data.mode !== "own", own: data.mode !== "feed" };
   const intro = $("stock-intro");
-  if (intro && !intro.dataset.feedText) intro.dataset.feedText = intro.textContent;
   if (intro) {
-    intro.textContent = both
-      ? "AutoPulse feed + your own cars. Cars from the AutoPulse feed come in by themselves (read-only). Add cars here that are not in the feed: they show together with the feed cars in the website chat, AI replies, car pages and Vehicles. Use Mark sold when one is sold."
-      : intro.dataset.feedText;
+    intro.textContent = src.own && src.feed
+      ? "This store shows the AutoPulse feed and your own cars together. Feed cars come in by themselves (read-only); add cars that are not in the feed with Add car. Every car is in the list below."
+      : src.own
+        ? "This store shows only the cars you add here (not the AutoPulse feed). They appear in the website chat, AI replies, car pages and the list below."
+        : "This store shows the AutoPulse feed (read-only). Tick My own cars to add cars that are not in the feed.";
   }
-  $("stock-own").hidden = !["own", "both"].includes(data.mode);
+  $("stock-own").hidden = !src.own;
+  for (const id of ["stock-q", "stock-status"]) if ($(id)) $(id).hidden = true; // search and filters are in the list below
   for (const id of ["stock-add", "stock-import-label"]) $(id).hidden = !data.canEdit;
-  $("stock-counts").textContent = `${both ? "Your own cars: " : ""}${data.counts.active} for sale · ${data.counts.sold} sold`;
+  $("stock-counts").textContent = `Your own cars: ${data.counts.active} for sale · ${data.counts.sold} sold`;
   paintTable();
+}
+
+function paintSources() {
+  const { $, h } = ctx;
+  const box = $("stock-mode");
+  const src = data.sources || { feed: data.mode !== "own", own: data.mode !== "feed" };
+  const tick = (key, label, locked, title) => {
+    const input = h("input", { type: "checkbox", id: `stock-src-${key}` });
+    input.checked = Boolean(src[key]);
+    input.disabled = !data.canEdit || locked;
+    input.addEventListener("change", () => setSources(key, input));
+    return h("label", { class: "stock-src", title }, input, " ", label);
+  };
+  box.classList.remove("seg");
+  box.classList.add("stock-sources");
+  box.setAttribute("role", "group");
+  box.replaceChildren(
+    h("span", { class: "muted", text: "Cars from:" }),
+    tick("feed", "AutoPulse feed", data.feedLocked, data.feedLocked ? "AutoPulse CRM dealers always keep their AutoPulse feed" : "Cars from the AutoPulse car feed (read-only)"),
+    tick("own", "My own cars", false, "Cars you add here"),
+  );
+  box.hidden = false;
 }
 
 function paintTable() {
   const { $, h } = ctx;
-  if (!data.items.length) {
-    $("stock-body").replaceChildren(h("tr", {}, h("td", { colspan: "7", class: "muted", text: data.counts.active + data.counts.sold ? "No cars match." : (data.mode === "both" ? "No cars of your own yet. The feed's cars are listed below; add a car here that is not in the feed, or import a CSV." : "No cars yet. Add your first car, or import a CSV in the AutoPulse feed's columns.") })));
-    return;
-  }
-  $("stock-body").replaceChildren(...data.items.map((v) => {
+  const sold = data.items.filter((v) => v.status === "sold");
+  const head = $("stock-own").querySelector("thead")?.closest("table");
+  if (head) head.hidden = !sold.length;
+  let title = document.getElementById("stock-sold-title");
+  if (!title && head) { title = h("h4", { id: "stock-sold-title", class: "stock-sold-title" }); head.before(title); }
+  if (title) { title.textContent = `Sold cars (${sold.length}): relist or delete`; title.hidden = !sold.length; }
+  $("stock-body").replaceChildren(...sold.map((v) => {
     const acts = data.canEdit ? [
       h("button", { type: "button", class: "btn btn-sm", text: "Edit", onclick: () => openCar(v) }),
-      h("button", { type: "button", class: "btn btn-sm", text: v.status === "sold" ? "Relist" : "Mark sold", onclick: () => toggleSold(v) }),
+      h("button", { type: "button", class: "btn btn-sm", text: "Relist", onclick: () => toggleSold(v) }),
       h("button", { type: "button", class: "btn btn-sm btn-danger", text: "Delete", onclick: () => removeCar(v) }),
-    ] : [h("a", { class: "btn btn-sm", href: `/cars/${encodeURIComponent(data.website)}/${v.vin}`, target: "_blank", rel: "noopener", text: "View" })];
-    return h("tr", { class: v.status === "sold" ? "sold" : "" },
+    ] : [];
+    return h("tr", { class: "sold" },
       h("td", {}, v.photos[0] ? h("img", { class: "thumb", src: v.photos[0].url, alt: "", loading: "lazy" }) : h("span", { class: "thumb", text: "No photo" })),
       h("td", { class: "car" }, h("strong", { text: v.title }), h("small", { text: v.vin })),
       h("td", { text: money(v.price) }),
       h("td", { text: miles(v.miles) }),
-      h("td", {}, h("span", { class: `tag ${v.status === "sold" ? "promo" : "known"}`, text: v.status === "sold" ? "Sold" : "For sale" })),
-      h("td", { class: "muted", text: v.status === "sold" ? "—" : `${v.daysOnLot} d` }),
+      h("td", {}, h("span", { class: "tag promo", text: "Sold" })),
+      h("td", { class: "muted", text: "—" }),
       h("td", {}, h("div", { class: "row-acts" }, ...acts)));
   }));
 }
 
-async function setMode(mode) {
-  const { api, toast, confirmDialog } = ctx;
-  if (!data || data.mode === "both" || mode === data.mode) return;
+/** A tick box changed: feed only, own cars only, or both (at least one stays ticked). */
+async function setSources(key, input) {
+  const { api, toast, confirmDialog, $ } = ctx;
+  const feed = $("stock-src-feed").checked;
+  const own = $("stock-src-own").checked;
+  if (!feed && !own) { input.checked = true; toast("Keep at least one: the AutoPulse feed or your own cars", "warn"); return; }
+  const mode = feed && own ? "both" : own ? "own" : "feed";
   const text = mode === "own"
-    ? "The website chat, AI replies, car pages and Vehicles will use the cars you add here instead of the AutoPulse feed."
-    : "This store goes back to the AutoPulse feed. Your own cars are kept, but not shown, until you switch back.";
-  if (!await confirmDialog({ title: mode === "own" ? "Use my own inventory?" : "Use the AutoPulse feed?", text, okLabel: "Switch" })) return;
+    ? "The website chat, AI replies, car pages and Vehicles will show only the cars you add here, not the AutoPulse feed."
+    : mode === "feed"
+      ? "Your own cars are kept but no longer shown; only the AutoPulse feed is shown."
+      : "Your own cars will show together with the AutoPulse feed everywhere: website chat, AI replies, car pages and Vehicles.";
+  if (!await confirmDialog({ title: "Change where this store's cars come from?", text, okLabel: "Change" })) { input.checked = !input.checked; return; }
   try {
     await api("/api/stock/mode", { method: "POST", body: { mode } });
-    toast(mode === "own" ? "This store now uses its own inventory" : "This store now uses the AutoPulse feed", "success");
+    toast(mode === "both" ? "AutoPulse feed and your own cars are shown" : mode === "own" ? "Only your own cars are shown" : "Only the AutoPulse feed is shown", "success");
     loadStockPanel();
     ctx.reloadVehicles?.();
   } catch (error) {
+    input.checked = !input.checked;
     toast(error.message, "error");
   }
+}
+
+/** Edit / Mark sold / Delete for a car added in Connect, shown in the Vehicles list. */
+export function ownCarButtons(ownId) {
+  const { h, api, toast } = ctx;
+  if (!ownId || data?.canEdit === false) return [];
+  const withCar = (fn) => async () => {
+    try { fn((await api(`/api/stock/${ownId}`)).vehicle); } catch (error) { toast(error.message, "error"); }
+  };
+  return [
+    h("button", { type: "button", class: "btn btn-sm", text: "Edit", onclick: withCar(openCar) }),
+    h("button", { type: "button", class: "btn btn-sm", text: "Mark sold", onclick: withCar(toggleSold) }),
+    h("button", { type: "button", class: "btn btn-sm btn-danger", text: "Delete", onclick: withCar(removeCar) }),
+  ];
 }
 
 function fill(vehicle) {
@@ -153,6 +198,7 @@ async function saveCar(event) {
       $("stock-save").textContent = "Save changes";
       paintPhotos();
       loadStockPanel();
+      ctx.reloadVehicles?.();
     }
   } catch (error) {
     showErr(error.message);
