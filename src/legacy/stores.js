@@ -6,7 +6,13 @@ let ctx = null;
 const t = { page: 1, perPage: 25, filters: {} };
 const out = { page: 1, perPage: 50 };
 
-const KIND_CLASS = { crm: "src-website", owner: "src-twilio", local: "src-sms", test: "src-demo" };
+// Dealer types: a Connect dealer, or a CRM dealer that is "CRM only" until we turn Connect on ("CRM & Connect").
+const TYPE_CLASS = { connect: "src-twilio", crm_connect: "src-website", crm_only: "src-sms" };
+const TYPE_TIP = {
+  connect: "Lives only in AutoPulse Connect. Its owner and team sign in here.",
+  crm_connect: "An AutoPulse CRM dealer that also uses Connect. Its staff sign in with their CRM login.",
+  crm_only: "An AutoPulse CRM dealer that doesn't use Connect. Its staff can't sign in here; you can still open it. Turn Connect on in Actions.",
+};
 
 export function initStores(deps) {
   ctx = deps;
@@ -76,7 +82,8 @@ export async function loadStores() {
   body.replaceChildren(...(data.items.length ? data.items.map((s) => h("tr", {},
     h("td", {}, h("strong", { text: s.name || "—" }), controlBadges(s)),
     h("td", { class: "muted", text: s.website || "—" }),
-    h("td", {}, h("span", { class: `source-tag ${KIND_CLASS[s.kind] || ""}`, text: s.kindLabel })),
+    h("td", {}, h("span", { class: `source-tag ${TYPE_CLASS[s.type] || ""}`, text: s.kindLabel, "data-tip": TYPE_TIP[s.type] || "" }),
+      s.test ? h("span", { class: "source-tag src-demo type-test", text: "Test", "data-tip": "A store for testing. Real dealers never get its e-mails. It can't be deleted." }) : null),
     h("td", { text: s.contactName || "—" }),
     h("td", {}, s.email ? h("a", { href: `mailto:${s.email}`, text: s.email }) : "—"),
     h("td", { text: s.phone || "—" }),
@@ -96,18 +103,36 @@ export async function loadStores() {
  * (A native <select> cannot show a reason on one option, so this is a small menu of buttons.)
  */
 function storeActions(s) {
-  // Same rules as the server: a CRM dealer, or a Connect store with an owner account (test stores included).
-  const crm = s.kind === "crm", hasOwner = Boolean(s.owner);
+  // Same rules as the server. CRM-only dealers: admins can open them, but no one signs in until Connect is on.
+  const crm = s.kind === "crm", crmOnly = s.type === "crm_only", hasOwner = Boolean(s.owner);
   const ownerOff = s.owner?.disabled ? "This dealer account is turned off, so no one can sign in as them." : "";
   const noAccount = "No one signs in to this store: it has no owner account. Use 'Open store in new tab'.";
   return [
     { key: "open", label: "Open store in new tab" },
     { key: "details", label: "Edit store details" },
     { key: "controls", label: "Store controls (switch chat, AI, sign-in, tracking)", off: s.website ? "" : "Add the store's website first (Edit store details)." },
-    { key: "login", label: "Log in as dealer", off: crm ? "" : !hasOwner ? noAccount : ownerOff },
+    crm
+      ? { key: crmOnly ? "connect-on" : "connect-off", label: crmOnly ? "Turn Connect on" : "Turn Connect off (CRM only)" }
+      : { key: "connect-on", label: "Turn Connect on", off: "Connect dealers always use Connect." },
+    { key: "login", label: "Log in as dealer", off: crm ? (crmOnly ? "This dealer is CRM only. Turn Connect on first." : "") : !hasOwner ? noAccount : ownerOff },
     { key: "password", label: "Change password", off: crm ? "AutoPulse CRM dealers change their password in AutoPulse CRM." : hasOwner ? "" : noAccount },
-    { key: "delete", label: "Delete store", danger: true, off: crm ? "AutoPulse CRM dealers are removed in AutoPulse CRM. Use Store controls to pause sign-in or chat." : s.kind === "test" ? "Test stores are kept for testing and cannot be deleted." : "" },
+    { key: "delete", label: "Delete store", danger: true, off: crm ? "AutoPulse CRM dealers are removed in AutoPulse CRM. Use Store controls to pause sign-in or chat." : s.test ? "Test stores are kept for testing and cannot be deleted." : "" },
   ];
+}
+
+async function setConnect(s, on) {
+  const { api, toast, confirmDialog } = ctx;
+  const ok = await confirmDialog(on
+    ? { title: `Turn Connect on for ${s.name}?`, text: "It becomes 'CRM & Connect': its staff can sign in to AutoPulse Connect with their AutoPulse CRM login.", okLabel: "Turn Connect on" }
+    : { title: `Make ${s.name} CRM only?`, text: "Its staff are signed out of AutoPulse Connect now and can't sign in again until you turn Connect back on. Its chats and leads stay; you can still open it.", okLabel: "Make CRM only" });
+  if (!ok) return;
+  try {
+    const r = await api(`/api/admin/stores/${encodeURIComponent(s.id)}/connect`, { method: "POST", body: { on } });
+    toast(on ? `${s.name} now uses Connect` : `${s.name} is CRM only${r.signedOut ? ` · ${r.signedOut} signed out` : ""}`, "success");
+    loadStores();
+  } catch (error) {
+    toast(error.message, "error");
+  }
 }
 
 function closeRowMenus(except) {
@@ -151,6 +176,8 @@ function actionsFor(s) {
     if (action === "login") loginAs(s);
     if (action === "password") changePassword(s);
     if (action === "delete") deleteStore(s);
+    if (action === "connect-on") setConnect(s, true);
+    if (action === "connect-off") setConnect(s, false);
   });
   return box;
 }
