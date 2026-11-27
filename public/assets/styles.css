@@ -1756,3 +1756,10 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .switch.is-disabled { opacity: .4; cursor: not-allowed; }
 .ai-locked .switch { opacity: .45; cursor: not-allowed; }
 .ai-channel-status.locked { color: var(--warn); }
+
+/* Store controls: what AutoPulse switched off (Dashboard / Inbox) */
+.restrictions-bar { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); background: var(--warn-soft); border-radius: 12px; margin-bottom: 10px; flex: none; }
+.restrictions-ic { font-size: 16px; line-height: 1.3; color: var(--warn); }
+.restrictions-txt { display: grid; gap: 3px; font-size: 13px; }
+.restrictions-txt ul { margin: 0; padding-left: 18px; }
+.restrictions-txt small { color: var(--text-2); }
