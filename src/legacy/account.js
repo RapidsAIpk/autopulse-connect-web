@@ -1,7 +1,9 @@
 // PORTED by scripts/port-legacy.mjs from autopulse-connect-hub/public/assets/account.js — edit the port script, not this file.
 import { legacyFetch } from "@/lib/legacyFetch";
+import { initFormChecks, markServerField } from "./form-check.js";
 // Public account pages: sign-up with preview, forgot password, reset password, demo request, contact.
 const page = document.body.dataset.page;
+initFormChecks();
 const $ = (id) => document.getElementById(id);
 
 function el(tag, attrs = {}, ...children) {
@@ -30,6 +32,7 @@ async function postJson(url, body) {
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
+  if (res.status === 400 && data.field) markServerField(data);
   return { res, data };
 }
 
