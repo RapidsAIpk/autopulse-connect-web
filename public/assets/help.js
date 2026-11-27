@@ -536,6 +536,96 @@ export function startTour(key) {
   showStep(0);
 }
 
+// ---------- "Show me in the app" (from the feature & test sheet) ----------
+// The sheet links to /#view=<view>&find={label, sel, panel, hint, note}. app.js opens the screen; here we find
+// the button or panel (by id, else by its name inside the named panel), scroll to it and highlight it.
+// If it is not on screen yet (e.g. it needs an open chat), the box says what to do first and offers "Try again".
+const normText = (s) => String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
+const shown = (n) => Boolean(n && n.getClientRects().length && !n.closest("[hidden]"));
+
+function panelBox(name, scope) {
+  const want = normText(name);
+  const head = [...scope.querySelectorAll("h2, h3, h4, legend, summary")]
+    .find((x) => shown(x) && normText(x.textContent).replace(/\s*\?$/, "").startsWith(want));
+  if (!head) return null;
+  const box = head.closest("details, fieldset, section, .card, .panel") || head.parentElement;
+  if (box?.tagName === "DETAILS") box.open = true;
+  return box;
+}
+
+function findTarget(t) {
+  if (t.sel) {
+    const n = [...document.querySelectorAll(t.sel)].find(shown);
+    if (n) return n;
+  }
+  let scope = document.getElementById(`view-${t.view}`) || document.body;
+  if (t.panel) {
+    const box = panelBox(t.panel, scope);
+    if (box && !t.label) return box;
+    if (box) scope = box;
+  }
+  if (!t.label) return null;
+  const want = normText(t.label);
+  const nodes = [...scope.querySelectorAll("button, a, [role=button], [role=tab], summary, label")].filter(shown);
+  const names = (n) => [n.textContent, n.getAttribute("aria-label"), n.getAttribute("title"), n.dataset.tip].map(normText);
+  return nodes.find((n) => names(n).includes(want))
+    || nodes.find((n) => names(n).some((x) => x && x.startsWith(want)))
+    || nodes.find((n) => names(n).some((x) => x && want.length > 3 && x.includes(want)))
+    || null;
+}
+
+let finder = null;
+function endFind() {
+  finder?.layer.remove();
+  finder = null;
+}
+
+function showFind(t, node) {
+  endFind();
+  const name = t.label || t.panel;
+  const text = el("p", {}, el("b", { text: node ? `Here it is: “${name}”.` : `“${name}” is not on the screen yet.` }), " ",
+    node ? (t.note || "") : (t.hint || "Scroll the page or open the part it belongs to, then press Try again."));
+  const again = el("button", { type: "button", class: "btn btn-sm", onclick: () => { endFind(); lookFor(t, 8); } }, "Try again");
+  const box = el("div", { class: "help-tour-box", role: "dialog", "aria-live": "polite" }, text,
+    el("div", { class: "help-tour-actions" }, el("span", { class: "spacer" }), node ? null : again,
+      el("button", { type: "button", class: "btn btn-primary btn-sm", onclick: endFind }, node ? "Got it" : "Close")));
+  if (!node) {
+    // Nothing to point at: keep the page usable (no dark cover) so the tester can open the chat or panel first.
+    Object.assign(box.style, { right: "16px", bottom: "16px", zIndex: "1950" });
+    document.body.append(box);
+    finder = { layer: box };
+    return;
+  }
+  const spot = el("div", { class: "help-tour-spot" });
+  const layer = el("div", { class: "help-tour", onclick: (e) => { if (e.target === layer) endFind(); } }, spot, box);
+  document.body.append(layer);
+  finder = { layer };
+  node.scrollIntoView({ block: "center", inline: "nearest" });
+  requestAnimationFrame(() => {
+    const r = node.getBoundingClientRect();
+    const pad = 6;
+    Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
+    const b = box.getBoundingClientRect();
+    let top = r.bottom + 12;
+    if (top + b.height > innerHeight - 8) top = Math.max(8, r.top - b.height - 12);
+    const left = Math.min(Math.max(8, r.left), innerWidth - b.width - 8);
+    Object.assign(box.style, { top: `${top}px`, left: `${left}px` });
+  });
+}
+
+// Screens load their data after opening, so keep looking for a few seconds before saying it is not there.
+function lookFor(t, tries = 20) {
+  const node = findTarget(t);
+  if (node || tries <= 0) return showFind(t, node);
+  setTimeout(() => lookFor(t, tries - 1), 300);
+}
+
+export function findOnPage(t) {
+  if (!t || (!t.label && !t.sel && !t.panel)) return;
+  window.__autopulseFind = null;
+  setTimeout(() => lookFor(t), 400);
+}
+
 // ---------- ? icons ----------
 function iconsHidden() {
   try { return localStorage.getItem(STORE_KEY) === "hidden"; } catch { return false; }
@@ -607,8 +697,12 @@ export function initHelp() {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (tour) endTour();
+    else if (finder) endFind();
     else if (popEl) closePop();
   });
+  // "Show me in the app" from the feature & test sheet (app.js may have handed it over before this file loaded).
+  document.addEventListener("autopulse:find", (e) => findOnPage(e.detail));
+  if (window.__autopulseFind) findOnPage(window.__autopulseFind);
   addIcons();
   // Panels and headings that appear later (after loading, role checks) get their icon too.
   let pending = false;

@@ -3517,11 +3517,20 @@ async function init() {
   paintMeAvatar(me.user.photoUrl);
   initLeads({ $, h, api, toast, confirmDialog, openContact, showView, state, eraseCustomer: eraseCustomerFlow, isSuperAdmin });
   const owner = ["owner", "member"].includes(accountKind()); // inbox-only dealership accounts
-  const wantedView = /^#view=([a-z]+)(?:-([a-z]+))?$/.exec(location.hash);
+  // "/#view=<view>[-<settings tab>][&find=<json>]": open that screen. find comes from the feature & test sheet's
+  // "Show me in the app" link; Help (help.js) then highlights the button or panel a tester is looking for.
+  const wantedView = /^#view=([a-z]+)(?:-([a-z]+))?(?:&find=(.+))?$/.exec(location.hash);
   if (wantedView && VIEW_META[wantedView[1]]) {
     history.replaceState(null, "", location.pathname);
     showView(wantedView[1]);
     if (wantedView[2]) setTimeout(() => document.querySelector(`#settings-tabs [data-stab="${wantedView[2]}"]`)?.click(), 300);
+    if (wantedView[3]) {
+      try {
+        const find = { ...JSON.parse(decodeURIComponent(wantedView[3])), view: wantedView[1] };
+        window.__autopulseFind = find;
+        document.dispatchEvent(new CustomEvent("autopulse:find", { detail: find }));
+      } catch { /* a broken link just opens the screen */ }
+    }
   }
   await Promise.all([loadContacts(), loadStats(), loadAssignableStaff()]);
   // "/#chat=<chat id>" (e.g. from a customer page): open that chat.

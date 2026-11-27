@@ -35,7 +35,7 @@ export function PageShell({
       </head>
       <body className={bodyClass}>
         <Providers>{children}</Providers>
-        {help ? <Script src="/assets/help.js?v=14" type="module" strategy="lazyOnload" /> : null}
+        {help ? <Script src="/assets/help.js?v=15" type="module" strategy="lazyOnload" /> : null}
       </body>
     </html>
   );
