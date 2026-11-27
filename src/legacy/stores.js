@@ -96,14 +96,16 @@ export async function loadStores() {
  * (A native <select> cannot show a reason on one option, so this is a small menu of buttons.)
  */
 function storeActions(s) {
-  const crm = s.kind === "crm", owner = s.kind === "owner", hasLogin = crm || owner;
-  const noLogin = s.kind === "test" ? "Test stores have no dealer account. Use 'Open store in new tab'." : "This store has no dealer account to sign in as. Use 'Open store in new tab'.";
+  // Same rules as the server: a CRM dealer, or a Connect store with an owner account (test stores included).
+  const crm = s.kind === "crm", hasOwner = Boolean(s.owner);
+  const ownerOff = s.owner?.disabled ? "This dealer account is turned off, so no one can sign in as them." : "";
+  const noAccount = "No one signs in to this store: it has no owner account. Use 'Open store in new tab'.";
   return [
     { key: "open", label: "Open store in new tab" },
     { key: "details", label: "Edit store details" },
     { key: "controls", label: "Store controls (switch chat, AI, sign-in, tracking)", off: s.website ? "" : "Add the store's website first (Edit store details)." },
-    { key: "login", label: "Log in as dealer", off: hasLogin ? "" : noLogin },
-    { key: "password", label: "Change password", off: owner ? "" : crm ? "AutoPulse CRM dealers change their password in AutoPulse CRM." : "This store has no dealer sign-in, so there is no password." },
+    { key: "login", label: "Log in as dealer", off: crm ? "" : !hasOwner ? noAccount : ownerOff },
+    { key: "password", label: "Change password", off: crm ? "AutoPulse CRM dealers change their password in AutoPulse CRM." : hasOwner ? "" : noAccount },
     { key: "delete", label: "Delete store", danger: true, off: crm ? "AutoPulse CRM dealers are removed in AutoPulse CRM. Use Store controls to pause sign-in or chat." : s.kind === "test" ? "Test stores are kept for testing and cannot be deleted." : "" },
   ];
 }
