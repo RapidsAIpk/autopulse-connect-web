@@ -437,10 +437,22 @@ function wireWidget() {
 
 export async function loadWidgetPanel() {
   wireWidget();
+  const panel = ctx.$("widget-panel");
+  let note = document.getElementById("widget-no-site");
   try {
     paintWidget(await ctx.api("/api/store-widget"));
-    ctx.$("widget-panel").hidden = false;
-  } catch {
-    ctx.$("widget-panel").hidden = true; // no website set for this store
+    panel.hidden = false;
+    if (note) note.hidden = true;
+  } catch (error) {
+    panel.hidden = true; // no website set for this store
+    // Say why the page is empty: the chat lives on the store's website, and this store has none yet.
+    if (!note) {
+      note = ctx.h("p", { id: "widget-no-site", class: "callout" });
+      panel.before(note);
+    }
+    note.textContent = /website/i.test(error?.message || "")
+      ? "This store has no website yet, so it has no website chat. Add the store's website (in the AutoPulse CRM for CRM dealers, or under Store details), then come back here for the chat code."
+      : `The website chat settings could not be loaded: ${error?.message || "try again"}`;
+    note.hidden = false;
   }
 }
