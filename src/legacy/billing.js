@@ -35,7 +35,8 @@ export function initBilling(deps) {
     grid.append(h("div", { class: "panel pad billing-panel", id: "billing-panel", "data-stab": "billing", hidden: !deps.showDealerTab }, h("h3", { text: "Billing" }), h("div", { id: "billing-body", class: "stack" }, h("p", { class: "muted", text: "Loading…" }))));
     grid.append(h("div", { class: "panel pad admin-only billing-panel", id: "billing-admin-panel", "data-stab": "site", hidden: state.me?.role !== "admin" }, h("h3", { text: "Billing" }), h("div", { id: "billing-admin-body", class: "stack" }, h("p", { class: "muted", text: "Loading…" }))));
   }
-  handleReturn();
+  // After every other part of the app is set up (opening Settings shows Team, Pop-ups… which start after billing).
+  setTimeout(() => handleReturn(), 0);
 }
 
 // ---------- coming back from Stripe ----------
