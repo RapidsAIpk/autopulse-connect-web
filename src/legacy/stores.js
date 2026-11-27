@@ -91,32 +91,67 @@ export async function loadStores() {
   pager($("stores-pager"), data.page, data.perPage, data.total, (p) => { t.page = p; loadStores(); });
 }
 
+/**
+ * The same Actions menu on every store. What a store cannot do is greyed out, and hovering it says why.
+ * (A native <select> cannot show a reason on one option, so this is a small menu of buttons.)
+ */
+function storeActions(s) {
+  const crm = s.kind === "crm", owner = s.kind === "owner", hasLogin = crm || owner;
+  const noLogin = s.kind === "test" ? "Test stores have no dealer account. Use 'Open store in new tab'." : "This store has no dealer account to sign in as. Use 'Open store in new tab'.";
+  return [
+    { key: "open", label: "Open store in new tab" },
+    { key: "details", label: "Edit store details" },
+    { key: "controls", label: "Store controls (switch chat, AI, sign-in, tracking)", off: s.website ? "" : "Add the store's website first (Edit store details)." },
+    { key: "login", label: "Log in as dealer", off: hasLogin ? "" : noLogin },
+    { key: "password", label: "Change password", off: owner ? "" : crm ? "AutoPulse CRM dealers change their password in AutoPulse CRM." : "This store has no dealer sign-in, so there is no password." },
+    { key: "delete", label: "Delete store", danger: true, off: crm ? "AutoPulse CRM dealers are removed in AutoPulse CRM. Use Store controls to pause sign-in or chat." : s.kind === "test" ? "Test stores are kept for testing and cannot be deleted." : "" },
+  ];
+}
+
+function closeRowMenus(except) {
+  for (const d of document.querySelectorAll("details.row-actions[open]")) if (d !== except) d.open = false;
+}
+
 function actionsFor(s) {
   const { h } = ctx;
-  const menu = h("select", { class: "row-menu", "aria-label": `Actions for ${s.name}`, "data-tip": "What to do with this store" },
-    h("option", { value: "", text: "Actions…" }),
-    h("option", { value: "open", text: ["crm", "owner"].includes(s.kind) ? "Open dealer in new tab" : "View store in new tab" }),
-    h("option", { value: "details", text: "Edit store details" }),
-    s.website ? h("option", { value: "controls", text: "Store controls (switch chat, AI, sign-in, tracking)" }) : null,
-    ["crm", "owner"].includes(s.kind) ? h("option", { value: "login", text: "Log in as dealer" }) : null,
-    s.kind === "owner" ? h("option", { value: "password", text: "Change password" }) : null,
-    ["owner", "local"].includes(s.kind) ? h("option", { value: "delete", text: "Delete store" }) : null,
-  );
-  menu.addEventListener("change", async () => {
-    const action = menu.value;
-    menu.value = "";
-    if (action === "open") {
-      if (["crm", "owner"].includes(s.kind)) loginAs(s);
-      else openStore(s, "dashboard");
-    }
+  const items = storeActions(s);
+  const list = h("div", { class: "row-actions-menu", role: "menu" }, ...items.map((a) => {
+    const b = h("button", { type: "button", role: "menuitem", class: `row-actions-item${a.danger ? " danger" : ""}${a.off ? " is-disabled" : ""}`, text: a.label, "data-act": a.key });
+    if (a.off) { b.setAttribute("aria-disabled", "true"); b.dataset.tip = a.off; }
+    return b;
+  }));
+  const box = h("details", { class: "row-actions" },
+    h("summary", { class: "btn row-actions-btn", "aria-label": `Actions for ${s.name}`, "data-tip": "What to do with this store", text: "Actions" }), list);
+  box.addEventListener("toggle", () => {
+    if (!box.open) return;
+    closeRowMenus(box);
+    // Fixed position so the table's scroll box never cuts it off; open upwards near the bottom of the window.
+    const r = box.querySelector("summary").getBoundingClientRect();
+    list.style.top = list.style.bottom = "";
+    list.style.right = `${Math.max(6, innerWidth - r.right)}px`;
+    const below = innerHeight - r.bottom;
+    if (below < list.offsetHeight + 12 && r.top > below) list.style.bottom = `${innerHeight - r.top + 4}px`;
+    else list.style.top = `${r.bottom + 4}px`;
+  });
+  list.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-act]");
+    if (!b || b.getAttribute("aria-disabled") === "true") return;
+    box.open = false;
+    const action = b.dataset.act;
+    if (action === "open") openStore(s, "dashboard"); // you, as admin, viewing this store
     if (action === "details") openStore(s, "settings-dealership");
     if (action === "controls") openControls(s);
     if (action === "login") loginAs(s);
     if (action === "password") changePassword(s);
     if (action === "delete") deleteStore(s);
   });
-  return menu;
+  return box;
 }
+
+// Close an open Actions menu on an outside click, Escape, or when the page scrolls under it.
+document.addEventListener("click", (e) => { if (!e.target.closest?.("details.row-actions")) closeRowMenus(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeRowMenus(); });
+addEventListener("scroll", () => closeRowMenus(), true);
 
 // ---------- Store controls (AutoPulse admins switch parts of one dealership off) ----------
 const CONTROL_INFO = {
