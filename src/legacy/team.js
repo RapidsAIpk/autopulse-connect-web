@@ -44,11 +44,10 @@ export function applyStoreKind() {
   const store = ctx.state?.store || {};
   for (const view of ["staff", "pages"]) {
     const rail = document.querySelector(`.rail-btn[data-view="${view}"]`);
-    // The Team page also exists for AutoPulse CRM dealers (their team comes from the CRM).
-    if (rail && !store.hasTeam && !(view === "staff" && store.crmTeam)) rail.hidden = true;
+    // Team and Pages also exist for AutoPulse CRM dealers (their team comes from the CRM; pages are kept in Connect).
+    if (rail && !store.hasTeam && !store.crmTeam) rail.hidden = true;
   }
-  if (store.hasTeam) { loadTeam(); loadStorePage(); loadMyPage(); }
-  else if (store.crmTeam) loadTeam();
+  if (store.hasTeam || store.crmTeam) { loadTeam(); loadStorePage(); loadMyPage(); }
   else { data = null; for (const id of ["team-panel", "departments-panel", "roles-panel", "store-page-panel", "my-page-panel"]) { const n = $(id); if (n) n.hidden = true; } }
   if (store.inboxOnly) { loadAiProfile(); loadStoreSettings(); }
   else { for (const id of ["ai-profile-panel", "notify-panel"]) { const n = $(id); if (n) n.hidden = true; } const ro = $("route-options"); if (ro) ro.hidden = true; }
