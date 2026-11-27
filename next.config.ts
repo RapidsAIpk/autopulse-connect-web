@@ -36,6 +36,8 @@ const nextConfig: NextConfig = {
     return [
       // The app overview (how the app works, every screen and the flow): a static page in public/.
       { source: "/overview", destination: "/overview.html" },
+      // The user manual (every screen, step by step, with screenshots): a static page in public/.
+      { source: "/manual", destination: "/manual.html" },
       ...BACKEND_PATHS.map((source) => ({ source, destination: `${API}${source}` })),
     ];
   },

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AutoPulse Connect User Manual</title>
+  <meta name="description" content="Step-by-step guide to AutoPulse Connect for dealership owners, managers and staff, with screenshots of every screen." />
+  <link rel="icon" href="/assets/logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
+  <style>
+/* Layout: a handbook — sticky contents rail on the left, one reading column with full-width screenshots. */
+:root {
+  --bg: #f6f8fc; --paper: #ffffff; --ink: #0f1b2d; --muted: #566179; --line: #dfe5ef;
+  --accent: #1a63d8; --accent-soft: #e7f0fd; --ok: #15803d; --ok-soft: #e7f6ec; --soon: #8a5a00; --soon-soft: #fdf3dc;
+  --shadow: 0 1px 2px rgba(15, 27, 45, .06), 0 8px 24px rgba(15, 27, 45, .06);
+  --display: "Manrope", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c1220; --paper: #121a2b; --ink: #e8eef8; --muted: #9aa8bf; --line: #24304a;
+  --accent: #6ea8ff; --accent-soft: #16294a; --ok: #4ade80; --ok-soft: #12301f; --soon: #f5c565; --soon-soft: #352a12;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0c1220; --paper: #121a2b; --ink: #e8eef8; --muted: #9aa8bf; --line: #24304a;
+  --accent: #6ea8ff; --accent-soft: #16294a; --ok: #4ade80; --ok-soft: #12301f; --soon: #f5c565; --soon-soft: #352a12;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25); color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15.5px/1.65 var(--body); }
+a { color: var(--accent) }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 32px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; max-height: calc(100vh - 48px); overflow: auto; font-size: 13.5px; }
+nav.toc .brand { font: 800 15px/1.2 var(--display); letter-spacing: -.01em; margin-bottom: 14px; display: flex; align-items: center; gap: 8px }
+nav.toc .brand svg { width: 26px; height: 26px }
+nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 1px }
+nav.toc li { counter-increment: s }
+nav.toc a { display: flex; gap: 8px; padding: 5px 8px; border-radius: 7px; color: var(--muted); text-decoration: none }
+nav.toc a::before { content: counter(s, decimal-leading-zero); font-variant-numeric: tabular-nums; color: var(--line); font-weight: 600; min-width: 18px }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--accent-soft); color: var(--ink); outline: none }
+main { min-width: 0; max-width: 820px }
+header.hero { padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 36px }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 600; color: var(--accent) }
+h1 { font: 800 clamp(30px, 4.4vw, 44px)/1.1 var(--display); letter-spacing: -.025em; margin: 8px 0 14px; text-wrap: balance }
+.lede { font-size: 17.5px; color: var(--muted); max-width: 62ch; margin: 0 }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 18px; font-size: 13px; color: var(--muted) }
+.meta b { color: var(--ink); font-weight: 600 }
+section { padding-top: 26px; margin-top: 30px; border-top: 1px solid var(--line); scroll-margin-top: 16px }
+section:first-of-type { border-top: 0; margin-top: 0; padding-top: 0 }
+h2 { font: 800 26px/1.2 var(--display); letter-spacing: -.02em; margin: 0 0 8px; text-wrap: balance; display: flex; align-items: baseline; gap: 12px }
+h2 .n { font: 700 14px/1 var(--display); color: var(--accent); font-variant-numeric: tabular-nums }
+h3 { font: 700 17.5px/1.3 var(--display); margin: 26px 0 6px }
+p, li { max-width: 68ch }
+p { margin: 8px 0 }
+ol.steps, ul.points { padding-left: 22px; margin: 8px 0 }
+ol.steps li, ul.points li { margin: 4px 0 }
+.where { font-size: 13px; color: var(--muted); margin: 0 0 10px }
+.where b { color: var(--ink); font-weight: 600 }
+figure { margin: 18px 0 22px }
+figure .shot { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; display: block }
+figure img { display: block; width: 100%; height: auto }
+figure.narrow .shot { max-width: 440px }
+figure.mid .shot { max-width: 620px }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; max-width: 70ch }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start }
+.pair figure { margin: 10px 0 }
+.note { background: var(--accent-soft); border-radius: 10px; padding: 12px 16px; margin: 14px 0; font-size: 14.5px }
+.note b { font-weight: 600 }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; vertical-align: 1px }
+.tag.ok { background: var(--ok-soft); color: var(--ok) } .tag.soon { background: var(--soon-soft); color: var(--soon) } .tag.lead { background: var(--accent-soft); color: var(--accent) }
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 18px 0 6px; counter-reset: f }
+.flow div { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 13px; color: var(--muted); counter-increment: f }
+.flow div b { display: block; color: var(--ink); font: 700 14px/1.3 var(--display); margin-bottom: 4px }
+.flow div b::before { content: counter(f) ". "; color: var(--accent) }
+table.roles { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0 }
+.tablewrap { overflow-x: auto }
+table.roles th, table.roles td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top }
+table.roles th { font: 700 12px/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+kbd { font: 600 12px/1 ui-monospace, Menlo, monospace; background: var(--paper); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 2px 6px }
+.soonlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 }
+.soonlist div { border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14px }
+.soonlist div b { font-family: var(--display) }
+footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted) }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 20px }
+  nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--paper) }
+  nav.toc ol { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .flow { grid-template-columns: minmax(0, 1fr) }
+  .pair, .soonlist { grid-template-columns: minmax(0, 1fr) }
+}
+@media (max-width: 480px) { nav.toc ol { grid-template-columns: minmax(0, 1fr) } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth } }
+</style>
+  <style>html{color-scheme:light} body{margin:0} img{max-width:100%} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <nav class="toc" aria-label="Contents">
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M5 17h6l3-7 4 13 3-6h6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>AutoPulse Connect</div>
+    <ol>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#sign-in">Signing in</a></li>
+      <li><a href="#getting-around">Getting around</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#inbox">Inbox</a></li>
+      <li><a href="#chat">Working a chat</a></li>
+      <li><a href="#leads">Leads</a></li>
+      <li><a href="#appointments">Appointments</a></li>
+      <li><a href="#vehicles">Vehicles</a></li>
+      <li><a href="#conversations">Conversations</a></li>
+      <li><a href="#visitors">Visitors</a></li>
+      <li><a href="#website-chat">Website chat</a></li>
+      <li><a href="#store">Store</a></li>
+      <li><a href="#team">Team and roles</a></li>
+      <li><a href="#pages">Pages to share</a></li>
+      <li><a href="#settings">Settings</a></li>
+      <li><a href="#visitor-view">What visitors see</a></li>
+      <li><a href="#coming-soon">Coming soon</a></li>
+      <li><a href="#tips">Tips and answers</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">User manual</div>
+      <h1>AutoPulse Connect, step by step</h1>
+      <p class="lede">AutoPulse Connect puts an AI chat on your dealership website, answers customers from your live stock, and brings every conversation, lead and booked visit into one inbox your team works from.</p>
+      <div class="meta"><a href="/">← Back to the app</a><span><b>For</b> dealership owners, managers and sales staff</span><span><b>App</b> connect.autopulse.ai</span><span><b>Edition</b> November 2026</span></div>
+    </header>
+
+    <section id="how-it-works">
+      <h2><span class="n">01</span>How it works</h2>
+      <p>Every customer conversation follows the same path. The AI does the first part, and your team takes over whenever it wants to.</p>
+      <div class="flow">
+        <div><b>Visitor</b>opens the chat bubble on your website and picks a department.</div>
+        <div><b>Details</b>gives a name, e-mail and phone once, so you can follow up.</div>
+        <div><b>AI answers</b>from your live stock, with car cards, prices and links.</div>
+        <div><b>Your team</b>sees the chat live, replies or takes over at any moment.</div>
+        <div><b>Lead or visit</b>is saved, e-mailed to your CRM and listed in the app.</div>
+      </div>
+      <p class="where">The screenshots in this manual come from a demo dealership with sample customers.</p>
+    </section>
+
+    <section id="sign-in">
+      <h2><span class="n">02</span>Signing in</h2>
+      <ol class="steps">
+        <li>Go to <b>connect.autopulse.ai</b> and enter your e-mail and password.</li>
+        <li>Dealership owners also get a <b>6-digit sign-in code</b> by e-mail. Type it in and press <b>Verify and sign in</b>.</li>
+        <li>New team members sign in with the temporary password they were given, then choose their own password (at least 12 characters).</li>
+      </ol>
+      <figure class="mid"><span class="shot"><img src="/manual/img/01-sign-in.jpg" width="1440" height="900" alt="AutoPulse sign-in page" loading="lazy"></span><figcaption>The sign-in page. Forgot your password? Use the link under the form and we e-mail you a reset link.</figcaption></figure>
+      <div class="note"><b>Security.</b> After five wrong passwords the account locks for 15 minutes. Changing your password signs out your other devices.</div>
+    </section>
+
+    <section id="getting-around">
+      <h2><span class="n">03</span>Getting around</h2>
+      <ul class="points">
+        <li><b>Menu (left):</b> every screen of the app. <b>Collapse menu</b> at the bottom narrows it to icons.</li>
+        <li><b>Viewing (top):</b> if you have more than one store, pick the one you are working on. Every screen follows it.</li>
+        <li><b>Live (top):</b> shows that new chats and messages arrive without reloading the page.</li>
+        <li><b>Help:</b> explains the screen you are on. <b>Show me</b> starts a short guided tour. The small <b>?</b> icons explain each panel.</li>
+        <li><b>Theme:</b> switches between light and dark. The app remembers your choice.</li>
+      </ul>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/28-help.jpg" width="1440" height="950" alt="Help pop-up on the Leads screen" loading="lazy"></span><figcaption>Help explains the screen. Show me starts the tour.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/29-tour.jpg" width="1440" height="950" alt="A guided tour step" loading="lazy"></span><figcaption>Each tour step highlights the part it explains.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="dashboard">
+      <h2><span class="n">04</span>Dashboard</h2>
+      <p class="where">Menu → <b>Dashboard</b></p>
+      <p>Your store at a glance. <b>Get started</b> lists the setup steps still to do; each <b>Set up</b> button opens the right page. The quick actions and the cards (Vehicles, Car page views, Leads, Appointments, Chats) each open their screen.</p>
+      <figure><span class="shot"><img src="/manual/img/02-dashboard.jpg" width="1440" height="950" alt="Dashboard with Get started, quick actions, cards and latest leads" loading="lazy"></span><figcaption>Get started, quick actions, today's numbers and the five newest leads.</figcaption></figure>
+      <p><b>Trends</b> further down shows charts of chats, messages, first-reply times, busy hours, leads, visits and car interest. Pick <b>7 days</b>, <b>30 days</b> or <b>90 days</b>, hover for numbers, or press <b>Table</b> to read them as a table.</p>
+      <figure><span class="shot"><img src="/manual/img/03-trends.jpg" width="1440" height="950" alt="Trends charts on the Dashboard" loading="lazy"></span><figcaption>Trends for the selected period.</figcaption></figure>
+    </section>
+
+    <section id="inbox">
+      <h2><span class="n">05</span>Inbox</h2>
+      <p class="where">Menu → <b>Inbox</b></p>
+      <p>Every customer conversation, newest first. Click a chat on the left to open it on the right.</p>
+      <ul class="points">
+        <li><b>Platform tabs:</b> All platforms or Website. WhatsApp and Messenger are <a href="#coming-soon">coming soon</a>.</li>
+        <li><b>Filters:</b> All, Unread, Unreplied (the customer wrote last), Promo, Human (the AI is paused for your team), Queue (waiting for a department) and Failed.</li>
+        <li><b>Search:</b> finds a chat by name, e-mail, phone or any word in the messages.</li>
+        <li><b>Tags on each chat:</b> department, lead status (<span class="tag lead">New lead</span> or <span class="tag ok">Inbox lead</span>) and who is handling it.</li>
+      </ul>
+      <figure><span class="shot"><img src="/manual/img/04-inbox.jpg" width="1440" height="950" alt="Inbox with chat list and open conversation" loading="lazy"></span><figcaption>The chat list on the left and the open conversation on the right, with the AI's car cards.</figcaption></figure>
+    </section>
+
+    <section id="chat">
+      <h2><span class="n">06</span>Working a chat</h2>
+      <h3>Reply as the team</h3>
+      <p>Type in the box at the bottom and press <kbd>Enter</kbd> (<kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line). The visitor sees your reply in their chat window within a few seconds. When you reply, the AI steps back and the chat is marked <b>Human</b>.</p>
+      <p>The switch at the right of the chat header turns the AI on or off for this one chat. If nobody on the team answers for a few minutes, the AI can take over again; you set how long under <a href="#settings">Settings → AI replies</a>.</p>
+      <figure><span class="shot"><img src="/manual/img/05-chat-header.jpg" width="832" height="195" alt="Chat header buttons" loading="lazy"></span><figcaption>Chat header: name and tags, search, starred messages, Customer page, Save lead, Book visit, Flag as promo and the AI switch. The chips below show what the visitor did (department, contact form, visits).</figcaption></figure>
+
+      <h3>Save a lead</h3>
+      <ol class="steps">
+        <li>Press <b>Save lead</b>. The customer's name, e-mail and phone are filled in from the chat.</li>
+        <li>Add the car's VIN (and ZIP if you have it), then press <b>Save lead</b>. A lead needs an e-mail or a phone number so you can reach the customer.</li>
+        <li>The lead appears under <a href="#leads">Leads</a>, is e-mailed to your CRM in ADF format, and the chat's tag changes from <span class="tag lead">New lead</span> to <span class="tag ok">Inbox lead</span>.</li>
+      </ol>
+      <h3>Book a visit</h3>
+      <ol class="steps">
+        <li>Press <b>Book visit</b>, pick the day (today or later) and time, and add the car if you like.</li>
+        <li>Press <b>Book visit</b>. It appears under <a href="#appointments">Appointments</a> and in the chat.</li>
+      </ol>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/06-save-lead.jpg" width="420" height="588" alt="Save lead window" loading="lazy"></span><figcaption>Save lead, filled in from the chat.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/07-book-visit.jpg" width="420" height="590" alt="Book visit window" loading="lazy"></span><figcaption>Book visit: date, time and car.</figcaption></figure>
+      </div>
+      <figure><span class="shot"><img src="/manual/img/08-chat-after.jpg" width="1440" height="950" alt="Chat after saving a lead" loading="lazy"></span><figcaption>After Save lead, the tag reads Inbox lead in the chat header and in the list.</figcaption></figure>
+
+      <h3>Send cars, files, emoji and voice notes</h3>
+      <ul class="points">
+        <li><b>Inventory</b> (car icon at the left of the message box): search your stock, tick one or more cars, press <b>Send selected</b>. Each car arrives as a card with photo, price and a link to the car's page, just like the AI's cars.</li>
+        <li><b>Attach</b> (paper clip): a document, photo or video, or an audio file.</li>
+        <li><b>Emoji</b> (smiley): pick an emoji or search for one.</li>
+        <li><b>Voice note</b> (microphone): record, press stop, then <b>Send</b>. Allow the microphone the first time.</li>
+      </ul>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/09-inventory.jpg" width="420" height="413" alt="Inventory picker" loading="lazy"></span><figcaption>Pick cars from your stock.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/11-message-menu.jpg" width="832" height="763" alt="Message actions menu" loading="lazy"></span><figcaption>The ⋯ menu on a message: Reply, Star, Copy, Info, Delete for me.</figcaption></figure>
+      </div>
+      <h3>Search, star and other tools</h3>
+      <ul class="points">
+        <li><b>Search this chat</b> (magnifier): shows only the messages with your word.</li>
+        <li><b>Star</b> a message from its ⋯ menu, then press <b>Starred messages</b> (star icon) to see only those.</li>
+        <li><b>Rename</b> (pencil next to the name): your own label for the customer; it is not sent to them.</li>
+        <li><b>Customer page</b>: opens a page for this customer with the chat history, cars and booking, to share with them.</li>
+        <li><b>Flag as promo</b>: pauses the AI and marks the chat for a person; <b>Unflag</b> turns the AI back on.</li>
+        <li><b>Activity chips</b> under the header (Department, Contact form, visits, car inquiry, visit booked): click one to jump to that moment in the chat.</li>
+      </ul>
+    </section>
+
+    <section id="leads">
+      <h2><span class="n">07</span>Leads</h2>
+      <p class="where">Menu → <b>Leads</b></p>
+      <p>Customers interested in a car, from the website chat and from your team. Each new lead is also e-mailed to your CRM.</p>
+      <ul class="points">
+        <li><b>By customer</b> lists people; <b>By car</b> groups leads per vehicle with a lead count.</li>
+        <li>Search by name, e-mail, phone or VIN; filter by status and dates; <b>Reset</b> clears the filters.</li>
+        <li><b>CSV</b> downloads the list. In each row: the eye opens the lead, the speech bubble opens its chat, and the bin deletes it after asking.</li>
+      </ul>
+      <figure><span class="shot"><img src="/manual/img/12-leads.jpg" width="1440" height="950" alt="Leads list" loading="lazy"></span><figcaption>Leads with filters, CSV export and row actions.</figcaption></figure>
+      <figure class="mid"><span class="shot"><img src="/manual/img/13-lead-details.jpg" width="560" height="726" alt="Lead details window" loading="lazy"></span><figcaption>Lead details: customer, car and source.</figcaption></figure>
+    </section>
+
+    <section id="appointments">
+      <h2><span class="n">08</span>Appointments</h2>
+      <p class="where">Menu → <b>Appointments</b></p>
+      <p>Showroom visits booked from chats and from the website, with booking counts at the top. Filter by name, source and <b>visit date</b> (Visit from / to), export <b>CSV</b>, and in each row view the booking, open its chat or delete it.</p>
+      <figure><span class="shot"><img src="/manual/img/14-appointments.jpg" width="1440" height="950" alt="Appointments list" loading="lazy"></span><figcaption>Booked visits.</figcaption></figure>
+    </section>
+
+    <section id="vehicles">
+      <h2><span class="n">09</span>Vehicles</h2>
+      <p class="where">Menu → <b>Vehicles</b></p>
+      <p>Your stock from the AutoPulse car feed. For each car you see its leads, how often it came up in chats, page views, and how many customers tapped Call, Text or WhatsApp on its page.</p>
+      <ul class="points">
+        <li>Search by make, model, body, new or used, year, price and miles.</li>
+        <li><b>View car</b> opens photos, price, specifications and activity. <b>Copy public link</b> copies the car's page link to send to a customer.</li>
+      </ul>
+      <figure><span class="shot"><img src="/manual/img/15-vehicles.jpg" width="1440" height="950" alt="Vehicles list" loading="lazy"></span><figcaption>Stock with per-car activity.</figcaption></figure>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/16-car-details.jpg" width="760" height="808" alt="Car details window" loading="lazy"></span><figcaption>Car details in the app.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/17-car-page.jpg" width="1300" height="900" alt="Public car page" loading="lazy"></span><figcaption>The public car page customers see, with Call, Text and Chat.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="conversations">
+      <h2><span class="n">10</span>Conversations</h2>
+      <p class="where">Menu → <b>Conversations</b></p>
+      <p>A log with one row per chat: when it started, the customer, the first question, message and follow-up counts, session time, clicks and whether a visit was booked. Sort and filter it, open the full transcript, or open the chat in the Inbox. <b>CSV</b> exports the rows and <b>Transcripts CSV</b> exports every message.</p>
+      <figure><span class="shot"><img src="/manual/img/18-conversations.jpg" width="1440" height="950" alt="Conversations log" loading="lazy"></span><figcaption>The conversation log.</figcaption></figure>
+    </section>
+
+    <section id="visitors">
+      <h2><span class="n">11</span>Visitors</h2>
+      <p class="where">Menu → <b>Visitors</b></p>
+      <p>Everyone who browses your website while visitor tracking is on: each visit, the pages they opened and the cars they looked at. Visitors who chat become <b>Identified</b>. The cards at the top (Visitors, Identified, Unverified, Anonymous, Came back, Looked at cars) filter the list. <b>Export</b> downloads the list or every page view as CSV or Excel.</p>
+      <figure><span class="shot"><img src="/manual/img/19-visitors.jpg" width="1440" height="950" alt="Visitors screen" loading="lazy"></span><figcaption>Visitors, the most viewed cars and what they look at.</figcaption></figure>
+      <div class="note"><b>Visitor tracking is off until you turn it on</b> in Website chat → Visitor tracking.</div>
+    </section>
+
+    <section id="website-chat">
+      <h2><span class="n">12</span>Website chat</h2>
+      <p class="where">Menu → <b>Website chat</b> (owners and managers)</p>
+      <h3>Put the chat on your website</h3>
+      <ol class="steps">
+        <li>Press <b>Copy embed code</b> and give it to whoever manages your website. It is one line that goes before <code>&lt;/body&gt;</code> on every page.</li>
+        <li>Press <b>Open test page</b> to try the chat before it is live.</li>
+        <li>Set the chat's name, colours, position, welcome message and opening hours, then press <b>Save chat widget</b>.</li>
+      </ol>
+      <figure><span class="shot"><img src="/manual/img/20-website-chat.jpg" width="1440" height="950" alt="Website chat settings" loading="lazy"></span><figcaption>Embed code, test page and the chat's look and hours.</figcaption></figure>
+      <h3>Pop-up messages</h3>
+      <p>Short messages that appear next to the closed chat bubble, each with up to three one-tap buttons (open the cars, ask a question, open the booking form). Add, reorder and remove messages, or press <b>Start from our suggestions</b>. Press <b>Save pop-up messages</b>; your website shows them within 5 minutes. <b>Try it on the test page</b> shows them as a new visitor would.</p>
+      <figure><span class="shot"><img src="/manual/img/21-popups.jpg" width="1202" height="868" alt="Pop-up messages editor with preview" loading="lazy"></span><figcaption>Pop-up messages with a live preview.</figcaption></figure>
+      <h3>Visitor tracking</h3>
+      <p>Choose <b>Off</b>, <b>Notice</b> (a short notice tells visitors) or <b>Consent</b> (visitors agree first), how long to keep the data, and which of your websites to track. Then press <b>Save visitor tracking</b>.</p>
+      <figure><span class="shot"><img src="/manual/img/22-tracking.jpg" width="1202" height="609" alt="Visitor tracking settings" loading="lazy"></span><figcaption>Visitor tracking settings.</figcaption></figure>
+    </section>
+
+    <section id="store">
+      <h2><span class="n">13</span>Store</h2>
+      <p class="where">Menu → <b>Store</b> (owners and managers)</p>
+      <ul class="points">
+        <li><b>Store details:</b> address (press <b>Find position from address</b> for the map), contact person, call and text numbers, manager alerts and time zone. The AI and your public pages use these.</li>
+        <li><b>What the AI knows:</b> links the AI shares when asked (inventory, credit application, trade-in, website) and a short note about the dealership. Open <b>What the AI is told</b> to read the exact text the AI receives.</li>
+        <li><b>My stores</b> (owners): add another store by its website. <b>Check stock</b> shows what the car feed has for that website first.</li>
+      </ul>
+      <figure><span class="shot"><img src="/manual/img/23-store.jpg" width="1440" height="950" alt="Store details" loading="lazy"></span><figcaption>Store details.</figcaption></figure>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/24-ai-knows.jpg" width="595" height="445" alt="What the AI knows" loading="lazy"></span><figcaption>What the AI knows.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/34-my-stores.jpg" width="595" height="385" alt="My stores panel" loading="lazy"></span><figcaption>My stores: add a store and check its stock.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="team">
+      <h2><span class="n">14</span>Team and roles</h2>
+      <p class="where">Menu → <b>Team</b> (owners and managers)</p>
+      <ol class="steps">
+        <li>Press <b>Add person</b>. Enter name, e-mail and title, pick the role (Agent or Manager), their departments and stores.</li>
+        <li>Choose <b>Temporary password</b> (shown once: copy it and give it to them) or <b>E-mail invite</b>.</li>
+        <li>They sign in and choose their own password. Use <b>Edit</b> or <b>More…</b> on a row to change a person, give a new password, turn them off or remove them.</li>
+      </ol>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/31-team.jpg" width="1440" height="900" alt="Team screen" loading="lazy"></span><figcaption>Team members and departments.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/32-add-person.jpg" width="420" height="694" alt="Add person window" loading="lazy"></span><figcaption>Add person.</figcaption></figure>
+      </div>
+      <h3>Departments and how chats are shared</h3>
+      <p>Tick the departments your website chat offers (Sales, Service, Trade-in, Finance, Parts, Other). With <b>Route new website chats</b> on, a chat goes to someone in the department the visitor picked; if nobody is online it waits in that department's queue and the AI keeps answering.</p>
+      <div class="tablewrap"><table class="roles">
+        <thead><tr><th>Role</th><th>What they do</th></tr></thead>
+        <tbody>
+          <tr><td><b>Owner</b></td><td>Everything for their stores: team, store details, website chat, pages, settings.</td></tr>
+          <tr><td><b>Manager</b></td><td>Runs the store and its agents: chats, leads, visits, team members, store settings.</td></tr>
+          <tr><td><b>Agent</b></td><td>Reads and answers the store's chats, saves leads and books visits.</td></tr>
+        </tbody>
+      </table></div>
+      <p>The full table is on the Team screen under <b>What each role can do</b>. The app refuses anything a role is not allowed to do.</p>
+    </section>
+
+    <section id="pages">
+      <h2><span class="n">15</span>Pages to share</h2>
+      <p class="where">Menu → <b>Pages</b></p>
+      <ul class="points">
+        <li><b>Dealership page:</b> your address, hours, departments, team, cars and a QR code. Choose <b>Private link</b> (opens only with its link) or <b>Public</b>, then press <b>Save</b>.</li>
+        <li><b>My page:</b> each person's own page with a <b>Chat with me</b> button. Chats started there come straight to that person.</li>
+        <li>Share the links or QR codes on window stickers, business cards and e-mail signatures.</li>
+      </ul>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/33-pages.jpg" width="1440" height="900" alt="Pages screen" loading="lazy"></span><figcaption>Dealership page and My page settings.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/35-dealership-page.jpg" width="1300" height="900" alt="Public dealership page" loading="lazy"></span><figcaption>The public dealership page.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="settings">
+      <h2><span class="n">16</span>Settings</h2>
+      <p class="where">Menu → <b>Settings</b></p>
+      <ul class="points">
+        <li><b>My account:</b> your name, photo, phone and address; your <b>time zone</b> (every date and time in the app follows it); and <b>Change password</b> (12 characters or more; your other devices are signed out).</li>
+        <li><b>AI replies:</b> the master switch for AI answers in your store, a switch for the <b>Website chat</b> (and for each other channel once connected), and <b>If nobody on the team replies within…</b>, the minutes before the AI takes back a chat a person is handling (or Never).</li>
+        <li><b>E-mails &amp; alerts:</b> who gets an e-mail when a chat waits in a queue, a customer asks for a person, or a new lead arrives; and the <b>ADF</b> address your CRM imports leads and visits from.</li>
+      </ul>
+      <figure><span class="shot"><img src="/manual/img/25-my-account.jpg" width="1440" height="950" alt="My account settings" loading="lazy"></span><figcaption>My account.</figcaption></figure>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/26-ai-replies.jpg" width="1440" height="950" alt="AI replies settings" loading="lazy"></span><figcaption>AI replies.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/27-emails.jpg" width="1440" height="950" alt="E-mails and alerts settings" loading="lazy"></span><figcaption>E-mails &amp; alerts.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="visitor-view">
+      <h2><span class="n">17</span>What visitors see</h2>
+      <p>The chat on your website, from the customer's side.</p>
+      <ol class="steps">
+        <li>The bubble sits in the corner in your colours. Pop-up messages appear next to it; visitors can close them or turn them off under ⋯.</li>
+        <li>The visitor picks a department, then gives name, e-mail and phone once. Names take letters only, and the form checks the e-mail and phone.</li>
+        <li>The AI answers from your stock with car cards: <b>I'm interested</b>, <b>View</b>, <b>Save</b>, <b>Share</b>.</li>
+        <li><b>Book a visit</b> picks a date (from today on) and time. <b>Request a call back</b> sends a lead to your team.</li>
+        <li><b>Talk to a person</b> alerts your team; the button changes to <b>Team notified</b>. Outside opening hours the chat says when you are back.</li>
+        <li>When the visitor comes back later, the chat continues where it stopped.</li>
+      </ol>
+      <div class="pair">
+        <figure><span class="shot"><img src="/manual/img/36-widget-bubble.jpg" width="1300" height="900" alt="Chat bubble with a pop-up message" loading="lazy"></span><figcaption>The bubble and a pop-up message.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/37-widget-open.jpg" width="1300" height="900" alt="Chat window with department choice" loading="lazy"></span><figcaption>Choosing a department.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/38-widget-form.jpg" width="1300" height="900" alt="Contact details form in the chat" loading="lazy"></span><figcaption>The visitor's details, asked once.</figcaption></figure>
+        <figure><span class="shot"><img src="/manual/img/39-widget-cars.jpg" width="1300" height="900" alt="Cars tab in the chat" loading="lazy"></span><figcaption>The Cars tab.</figcaption></figure>
+      </div>
+      <figure><span class="shot"><img src="/manual/img/40-widget-chat.jpg" width="1440" height="950" alt="Visitor chat with AI answers and a team reply" loading="lazy"></span><figcaption>The AI's answer and the team's reply in the same chat.</figcaption></figure>
+    </section>
+
+    <section id="coming-soon">
+      <h2><span class="n">18</span>Coming soon</h2>
+      <p>These channels are built into the app and switch on once they are connected for your dealership. Until then their tabs and buttons are hidden or marked <span class="tag soon">Coming soon</span>.</p>
+      <div class="soonlist">
+        <div><b>WhatsApp</b><br>Chats, new chats, approved templates and broadcast lists.</div>
+        <div><b>SMS</b><br>Text conversations from your dealership number.</div>
+        <div><b>Facebook Messenger</b><br>Messages to your Facebook Page.</div>
+        <div><b>Instagram</b><br>Direct messages to your Instagram account.</div>
+      </div>
+    </section>
+
+    <section id="tips">
+      <h2><span class="n">19</span>Tips and answers</h2>
+      <h3>Can the AI and my team both answer?</h3>
+      <p>Yes. The AI answers until someone on your team replies. Then the chat is yours, and the AI only steps back in if nobody answers within the time set under Settings → AI replies.</p>
+      <h3>Where do my leads go?</h3>
+      <p>They are listed under Leads and e-mailed in ADF format to the address under Settings → E-mails &amp; alerts, so your CRM can import them.</p>
+      <h3>How do I see a customer's whole story?</h3>
+      <p>Open the chat: the chips under the header show the department, contact form, visits and booked visit. Leads, Appointments and Conversations each link back to the chat.</p>
+      <h3>Something looks wrong?</h3>
+      <p>Press Help on that screen for an explanation, or contact AutoPulse at <b>info@autopulse.ai</b>.</p>
+    </section>
+
+    <footer>AutoPulse Connect · connect.autopulse.ai · Screens shown with a demo dealership and sample customers.</footer>
+  </main>
+</div>
+
+</body>
+</html>

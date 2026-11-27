@@ -1701,3 +1701,6 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .fbpage-utility h4 { margin: 0; font-size: 14px; }
 .fbpage-utility .muted { margin: 0; }
 .fbpage-icon.ig-icon { background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); font-size: 12px; }
+
+/* Inbox users: the role picker must show the whole role name. */
+.role-pick { min-width: 150px; }
