@@ -49,7 +49,7 @@ export async function loadPopups() {
     draft = clone(data.popups);
     canEdit = Boolean(data.canEdit);
     look = { botName: data.widget.botName || "Ava", color: data.widget.primaryColor || "#2f80ed", icon: data.widget.iconUrl || "" };
-    $("pp-test-link").href = data.testUrl || "#";
+    $("pp-test-link").href = data.testUrl ? `${data.testUrl}&preview=popups` : "#";
     focus = { kind: "message", index: 0 };
     paintAll();
   } catch (error) {

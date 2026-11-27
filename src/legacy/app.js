@@ -80,7 +80,26 @@ const voice = {
 };
 
 // ---------- API ----------
-async function api(path, { method = "GET", body } = {}) {
+async function api(path, options = {}) {
+  try {
+    return await apiOnce(path, options);
+  } catch (error) {
+    // "Invalid CSRF token": this browser's session changed under this tab (signed in as someone else in another tab,
+    // or signed in again). Same person: take the new token and try once more. Someone else: say so and reload.
+    if (!error.csrf || options.method === undefined || options.method === "GET") throw error;
+    const me = await legacyFetch("/api/me", { credentials: "same-origin", headers: state.sessionToken ? { "X-Session-Token": state.sessionToken } : {} }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (!me?.user) { window.location.replace("/login"); throw error; }
+    if (state.me && me.user.id !== state.me.id) {
+      toast(`You signed in as ${me.user.displayName || me.user.username} in another tab of this browser. This page now opens as that account.`, "warn");
+      setTimeout(() => window.location.reload(), 2500);
+      throw new Error("Signed in as another account in another tab");
+    }
+    state.csrf = me.csrfToken;
+    return apiOnce(path, options);
+  }
+}
+
+async function apiOnce(path, { method = "GET", body } = {}) {
   const headers = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (method !== "GET") headers["X-CSRF-Token"] = state.csrf;
@@ -98,7 +117,11 @@ async function api(path, { method = "GET", body } = {}) {
     throw new Error("Session expired");
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok) {
+    const error = new Error(data.error || `Request failed (${res.status})`);
+    if (res.status === 403 && /csrf/i.test(String(data.error || ""))) error.csrf = true;
+    throw error;
+  }
   if (Object.prototype.hasOwnProperty.call(data, "sessionToken")) {
     state.sessionToken = data.sessionToken || "";
     try {
@@ -2118,6 +2141,13 @@ function connectEvents() {
   const conn = $("conn");
   source.onopen = () => { conn.classList.add("live"); $("conn-label").textContent = "Live"; };
   source.onerror = () => { conn.classList.remove("live"); $("conn-label").textContent = "Reconnecting"; };
+  // Disabled, removed, new password or new role: AutoPulse signed this person out. Go to the sign-in page now.
+  source.addEventListener("session:ended", () => {
+    source.close();
+    state.sessionToken = "";
+    try { sessionStorage.removeItem("autopulse.sessionToken"); } catch {}
+    window.location.replace("/login?ended=1");
+  });
 
   source.addEventListener("message", (ev) => {
     const { message, contact } = JSON.parse(ev.data);
