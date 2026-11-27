@@ -301,6 +301,11 @@ export async function loadTeam() {
   let note = document.getElementById("team-crm-note");
   if (!note) { note = ctx.h("p", { id: "team-crm-note", class: "callout" }); $("team-panel").querySelector(".records-table, table")?.before(note); }
   note.hidden = !data.crm;
+  const intro = $("team-intro");
+  if (intro) {
+    intro.dataset.connect ||= intro.textContent;
+    intro.textContent = data.crm ? "Everyone who answers this dealership's chats, from AutoPulse CRM." : intro.dataset.connect;
+  }
   if (data.crm) {
     note.textContent = `This team comes from AutoPulse CRM: people are added and removed there, and sign in with their AutoPulse CRM login. Here you can set their Connect role and departments, or turn someone off in Connect only.${data.syncedAt ? ` Last updated from the CRM ${ago(data.syncedAt).toLowerCase()}.` : ""}`;
     $("team-add-btn").hidden = true;
