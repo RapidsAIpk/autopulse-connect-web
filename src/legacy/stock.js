@@ -42,7 +42,7 @@ function showErr(message) {
 export async function loadStockPanel() {
   const { $, api } = ctx;
   try {
-    data = await api("/api/stock?status=sold");
+    data = await api("/api/stock");
   } catch {
     $("stock-panel").hidden = true;
     return;
@@ -136,17 +136,26 @@ async function setSources(key, input) {
   }
 }
 
-/** Edit / Mark sold / Delete for a car added in Connect, shown in the Vehicles list. */
+/** Edit / Mark sold / Delete for a car added in Connect, as small icons in its Vehicles row. */
 export function ownCarButtons(ownId) {
   const { h, api, toast } = ctx;
   if (!ownId || data?.canEdit === false) return [];
   const withCar = (fn) => async () => {
     try { fn((await api(`/api/stock/${ownId}`)).vehicle); } catch (error) { toast(error.message, "error"); }
   };
+  const icon = (label, d, onclick, extra = "") => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+    return h("button", { type: "button", class: `icon-btn${extra}`, title: label, "aria-label": label, onclick }, svg);
+  };
   return [
-    h("button", { type: "button", class: "btn btn-sm", text: "Edit", onclick: withCar(openCar) }),
-    h("button", { type: "button", class: "btn btn-sm", text: "Mark sold", onclick: withCar(toggleSold) }),
-    h("button", { type: "button", class: "btn btn-sm btn-danger", text: "Delete", onclick: withCar(removeCar) }),
+    icon("Edit this car", "M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3zM13.5 6.5l3 3", withCar(openCar)),
+    icon("Mark sold", "M5 12.5l4.5 4.5L19 7.5", withCar(toggleSold)),
+    icon("Delete this car", "M5 7h14M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3", withCar(removeCar), " danger"),
   ];
 }
 

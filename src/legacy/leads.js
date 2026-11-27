@@ -653,7 +653,7 @@ function paintVehicles(t, data) {
   $("veh-body").replaceChildren(...(data.items.length ? data.items.map((car) => h("tr", {},
     h("td", {}, h("div", { class: "car-cell" },
       car.image ? h("img", { src: car.image, alt: "", loading: "lazy", referrerpolicy: "no-referrer" }) : null,
-      h("span", {}, car.title || "—", car.ownId ? h("span", { class: "tag known own-tag", title: "Added in Connect (My own cars)", text: "Own" }) : null,
+      h("span", {}, car.ownId ? h("span", { class: "tag known own-tag", title: "Added in Connect (My own cars)", text: "Own" }) : null, car.title || "—",
         car.store ? h("small", { class: "muted car-store", text: car.store }) : null))),
     h("td", { class: "mono", text: car.vin }),
     h("td", { text: money(car.price) || "Call" }),
