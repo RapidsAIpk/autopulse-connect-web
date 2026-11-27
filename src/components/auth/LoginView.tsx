@@ -86,7 +86,7 @@ export function LoginView() {
         setStep("code");
         return;
       }
-      window.location.replace("/");
+      window.location.replace("/admin");
     } catch (err) {
       if (isNetworkError(err)) {
         setError(NETWORK);
@@ -119,7 +119,7 @@ export function LoginView() {
     let message = "";
     try {
       await loginCode({ challenge, code: digits }).unwrap();
-      window.location.replace("/");
+      window.location.replace("/admin");
       return;
     } catch (err) {
       message = isNetworkError(err) ? NETWORK : errorText(err, "That code did not work.");

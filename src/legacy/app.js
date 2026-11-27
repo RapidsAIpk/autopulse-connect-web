@@ -3598,7 +3598,7 @@ async function init() {
       const id = decodeURIComponent(openStoreMatch[1]);
       const local = /^local:(\d+)$/.exec(id);
       await api("/api/dealerships/current", { method: "POST", body: local ? { id: Number(local[1]) } : { crmId: id } });
-      history.replaceState(null, "", `/#view=${openStoreMatch[2]}`);
+      history.replaceState(null, "", `/admin#view=${openStoreMatch[2]}`);
       location.reload();
       return;
     } catch (error) {
@@ -3609,7 +3609,7 @@ async function init() {
     history.replaceState(null, "", location.pathname);
     try {
       await api(`/api/admin/stores/${encodeURIComponent(decodeURIComponent(loginAsMatch[1]))}/login-as-token`, { method: "POST", body: {} });
-      location.replace("/");
+      location.replace("/admin");
       return;
     } catch (error) {
       toast(error.message, "error");

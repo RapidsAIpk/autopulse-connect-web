@@ -356,7 +356,7 @@ async function openStore(s, target) {
   }
   try { tab.opener = null; } catch {}
   // The new tab makes its own session and switches store there, so this tab keeps the store it is showing.
-  tab.location.href = `/#open-store=${encodeURIComponent(s.id)}&view=${encodeURIComponent(target)}`;
+  tab.location.href = `/admin#open-store=${encodeURIComponent(s.id)}&view=${encodeURIComponent(target)}`;
 }
 
 /**
@@ -365,7 +365,7 @@ async function openStore(s, target) {
  */
 function loginAs(s) {
   const { h } = ctx;
-  const url = `/#login-as=${encodeURIComponent(s.id)}`;
+  const url = `/admin#login-as=${encodeURIComponent(s.id)}`;
   const dialog = h("dialog", { class: "dialog" });
   const go = h("a", { href: url, target: "_blank", rel: "noopener", class: "btn btn-primary", text: "Log in as dealer" });
   go.addEventListener("click", () => setTimeout(() => dialog.close(), 0));
@@ -466,7 +466,7 @@ async function backToAdmin() {
   const { api, toast } = ctx;
   try {
     const result = await api("/api/admin/return", { method: "POST", body: {} });
-    location.href = result.signedOut ? "/login" : "/";
+    location.href = result.signedOut ? "/login" : "/admin";
   } catch (error) {
     toast(error.message, "error");
   }
