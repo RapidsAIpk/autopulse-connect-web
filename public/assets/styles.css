@@ -667,9 +667,11 @@ button.tag, .tag.known, .tag.new-lead { border: 0; cursor: pointer; }
 .activity-grid > .panel:first-child .table-wrap { max-height: 62vh; }
 .activity-grid > .panel:first-child { max-height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 /* Settings: a masonry-style column flow, so panels of any height pack without gaps. */
-.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 12px; align-items: start; }
-.settings-grid > .panel { min-width: 0; }
-.settings-grid > .panel { margin: 0; display: block; width: 100%; max-width: none; }
+.settings-grid { display: block; columns: 2 460px; column-gap: 12px; }
+.settings-grid > .panel { min-width: 0; break-inside: avoid; page-break-inside: avoid; }
+.settings-grid > .panel { margin: 0 0 12px; display: block; width: 100%; max-width: none; }
+/* Billing has wide tables: it takes the full width under the other panels. */
+.settings-grid > #billing-admin-panel, .settings-grid > #billing-panel { column-span: all; }
 .settings-grid .stack { max-width: none; }
 .settings-grid[data-active="dealership"] { columns: 1; }
 .settings-grid[data-active="dealership"] > .panel { max-width: 1120px; }
@@ -1415,6 +1417,8 @@ body[data-view="settings"], body[data-view="stores"], body[data-view="team"], bo
 .page-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 12px; align-items: start; }
 .page-grid > .panel { margin: 0; max-width: none; width: auto; min-width: 0; }
 .page-grid > .panel.full { grid-column: 1 / -1; }
+/* Store page: the WhatsApp-number panel sits alone under Store details, so it takes the full row. */
+.page-grid > #number-binding { grid-column: 1 / -1; }
 @media (max-width: 960px) { .page-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* Dashboard: colour cards, Get started, quick actions. */
@@ -1669,7 +1673,12 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 /* Long values (e-mails, addresses) are cut with "…" (full text on hover) so no column hides under the Action column. */
 .records-table td:not(.records-actions) { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
 /* Long single-column forms read better at a comfortable width on wide screens. */
-@media (min-width: 1400px) { .panel.full .address-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .panel.full .address-grid .span-2 { grid-column: span 3; } }
+/* Wide full-width forms: 3 fields per line, and a shorter line fills the width (no empty third column). */
+@media (min-width: 1400px) {
+  .panel.full .address-grid { display: flex; flex-wrap: wrap; }
+  .panel.full .address-grid > * { flex: 1 1 calc((100% - 25px) / 3); min-width: 0; }
+  .panel.full .address-grid > .span-2 { flex-basis: 100%; }
+}
 /* Spacing between the dashboard's blocks. */
 #view-dashboard > .panel, #view-dashboard > .dash-cards, #view-dashboard > .quick-actions { margin-bottom: 14px; }
 /* Stores → Store controls */
@@ -1777,6 +1786,8 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .billing-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .billing-kv { display: grid; gap: 6px; }
 .billing-kv .kv { grid-template-columns: minmax(110px, auto) 1fr; align-items: baseline; }
+/* Tags and values keep their own width (no full-width bars); long values such as URLs wrap. */
+.billing-kv .kv > :last-child { justify-self: start; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .billing-plans { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .billing-plan { display: grid; gap: 8px; align-content: start; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .billing-plan-name { font-size: 15px; }
@@ -1786,7 +1797,9 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .billing-block { padding-top: 6px; border-top: 1px solid var(--line); }
 .billing-block:first-of-type { border-top: 0; }
 .billing-table td, .billing-table th { white-space: nowrap; }
-.billing-table td:last-child { display: flex; gap: 6px; justify-content: flex-end; }
+/* The action cell stays a real table cell, so row lines run unbroken. */
+.billing-table td:last-child { display: table-cell; text-align: right; }
+.billing-table td:last-child > * + * { margin-left: 6px; }
 .billing-table tr.is-void td { text-decoration: line-through; opacity: .6; }
 .billing-table tr.is-void td:last-child { text-decoration: none; }
 .billing-request { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
