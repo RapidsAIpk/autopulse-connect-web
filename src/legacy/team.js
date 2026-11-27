@@ -296,6 +296,11 @@ export async function loadTeam() {
   ctx.refreshTabs?.();
   if (!data) return;
   $("team-add-btn").hidden = !data.you.canManage;
+  // Store controls: AutoPulse switched team invites off for this store.
+  const invitesOff = (document.body.dataset.featuresOff || "").split(" ").includes("invites");
+  $("team-add-btn").disabled = invitesOff;
+  if (invitesOff) $("team-add-btn").dataset.tip = "Adding team members is switched off for this dealership by AutoPulse. Please contact AutoPulse.";
+  else delete $("team-add-btn").dataset.tip;
   paintTeam();
   paintDepartments();
   loadRoles();

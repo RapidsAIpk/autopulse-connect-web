@@ -114,7 +114,7 @@ function storeActions(s) {
   return [
     { key: "open", label: "Open store in new tab" },
     { key: "details", label: "Edit store details" },
-    { key: "controls", label: "Store controls (switch chat, AI, sign-in, tracking)", off: s.website ? "" : "Add the store's website first (Edit store details)." },
+    { key: "controls", label: "Store controls (switch AI, channels, features on/off)" },
     s.subscribed
       ? { key: "unsubscribe", label: "Unsubscribe (can't use Connect)", danger: true }
       : { key: "subscribe", label: "Subscribe (can use Connect)" },
@@ -203,7 +203,20 @@ const CONTROL_INFO = {
   messenger: ["Messenger", "Off: no AI or staff messages; chats hidden (kept); no Messenger button in the website chat.", "Messenger off"],
   instagram: ["Instagram", "Off: no AI or staff messages; chats hidden (kept); no Instagram button in the website chat.", "Instagram off"],
 };
+Object.assign(CONTROL_INFO, {
+  aiWebsite: ["AI on website chat", "Off: the AI stops answering in the website chat. The team still replies there.", "Website AI off"],
+  aiWhatsapp: ["AI on WhatsApp", "Off: the AI stops answering on WhatsApp. The team still replies there.", "WhatsApp AI off"],
+  aiSms: ["AI on SMS", "Off: the AI stops answering texts. The team still replies there.", "SMS AI off"],
+  aiMessenger: ["AI on Messenger", "Off: the AI stops answering on Messenger. The team still replies there.", "Messenger AI off"],
+  aiInstagram: ["AI on Instagram", "Off: the AI stops answering on Instagram. The team still replies there.", "Instagram AI off"],
+  popups: ["Pop-ups", "Off: no pop-up greetings or attention messages on the dealer's website. The chat bubble stays.", "Pop-ups off"],
+  cars: ["Cars tab and car pages", "Off: no Cars tab or 'All cars' link in the website chat; AutoPulse car pages send visitors to the dealer's own website.", "Car pages off"],
+  booking: ["Booking a visit", "Off: customers can't book a visit from the website chat (the team can still book one from the Inbox).", "Booking off"],
+  invites: ["Team invites", "Off: the dealer can't add or invite team members. People already on the team keep working.", "Invites off"],
+});
 const CHANNEL_KEYS = ["whatsapp", "sms", "messenger", "instagram"];
+// Channel table in Store controls: [label, channel switch, AI switch].
+const CHANNEL_ROWS = [["Website chat", "chat", "aiWebsite"], ["WhatsApp", "whatsapp", "aiWhatsapp"], ["SMS", "sms", "aiSms"], ["Messenger", "messenger", "aiMessenger"], ["Instagram", "instagram", "aiInstagram"]];
 
 function controlBadges(s) {
   const { h } = ctx;
@@ -250,9 +263,29 @@ async function openControls(s) {
       testBtn.disabled = false;
     }
   });
+  const pick = (keys) => keys.map((k) => entries.find(([x]) => x === k)).filter(Boolean).map(row);
+  // Channels: "Channel" off = nothing in or out there; "AI" off = only the AI stops, the team still replies.
+  const sw = (k, label) => {
+    inputs[k] = h("input", { type: "checkbox", checked: data.controls[k] !== false, "aria-label": label });
+    return h("label", { class: "switch", "data-tip": `${CONTROL_INFO[k][0]}. ${CONTROL_INFO[k][1]}` }, inputs[k], h("span", { class: "switch-track" }, h("span", { class: "switch-thumb" })));
+  };
+  const table = h("table", { class: "ctl-table" },
+    h("thead", {}, h("tr", {}, h("th", { text: "Channel" }), h("th", { text: "On", "data-tip": "Off: nothing goes in or out on this channel" }), h("th", { text: "AI replies", "data-tip": "Off: the AI stops here; the team still replies" }))),
+    h("tbody", {}, ...CHANNEL_ROWS.map(([label, ch, ai]) => h("tr", {}, h("td", { text: label }), h("td", {}, sw(ch, `${label} on`)), h("td", {}, sw(ai, `AI on ${label}`))))));
+  const paintTable = () => {
+    for (const [, ch, ai] of CHANNEL_ROWS) {
+      const off = !inputs.ai.checked || !inputs[ch].checked;
+      inputs[ai].disabled = off;
+      inputs[ai].closest(".switch").classList.toggle("is-disabled", off);
+    }
+  };
   const rows = [
-    h("h4", { class: "ctl-head", text: "Store" }), ...entries.filter(([k]) => !CHANNEL_KEYS.includes(k)).map(row),
-    h("h4", { class: "ctl-head", text: "Channels this dealership may use" }), h("div", { class: "ctl-grid" }, ...entries.filter(([k]) => CHANNEL_KEYS.includes(k)).map(row)),
+    h("h4", { class: "ctl-head", text: "Access" }), ...pick(["signin"]),
+    h("h4", { class: "ctl-head", text: "AI" }), ...pick(["ai"]),
+    h("h4", { class: "ctl-head", text: "Channels" }), table,
+    h("p", { class: "hint", text: "On: the channel works. AI replies: off stops only the AI on that channel; the team can still reply." }),
+    h("h4", { class: "ctl-head", text: "Website chat features" }), h("div", { class: "ctl-grid" }, ...pick(["popups", "cars", "booking", "tracking"])),
+    h("h4", { class: "ctl-head", text: "Team" }), ...pick(["invites"]),
     h("h4", { class: "ctl-head", text: "Lead e-mails (ADF)" }),
     h("label", { class: "ctl-row" }, inputs.adfLive, h("span", {}, h("strong", { text: "Send ADF leads to the dealer (live)" }),
       h("em", { text: adfTo
@@ -260,17 +293,20 @@ async function openControls(s) {
         : "No ADF address is set for this dealership yet (Settings → E-mails & alerts while viewing it). Until then nothing can be sent live." }))),
     h("div", { class: "btn-row" }, testBtn, h("span", { class: "hint", text: "Uses the same test / live routing as real leads; the customer is named 'AutoPulse Test Lead - please delete'." })),
   ];
+  paintTable();
+  inputs.ai.addEventListener("change", paintTable);
+  for (const [, ch] of CHANNEL_ROWS) inputs[ch].addEventListener("change", paintTable);
   const save = h("button", { type: "submit", class: "btn btn-primary" }, "Save controls");
   const form = h("form", { class: "stack", method: "dialog" },
     h("h3", { text: `Store controls: ${data.store.name}` }),
-    h("p", { class: "muted", text: `${data.store.website} · ${data.store.kind}. Ticked = on. Every change is in the audit log.` }),
+    h("p", { class: "muted", text: `${data.store.website || "No website"} · ${data.store.kind}. Ticked = on. Every change is in the audit log.` }),
     ...rows,
     data.controls.updatedAt ? h("p", { class: "hint", text: `Last changed ${new Date(data.controls.updatedAt).toLocaleString()}` }) : null,
     h("div", { class: "dialog-actions" }, h("button", { type: "button", class: "btn", onclick: () => dialog.close() }, "Cancel"), save));
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const body = Object.fromEntries(Object.keys(inputs).map((k) => [k, inputs[k].checked]));
-    const turningOff = Object.keys(body).filter((k) => k !== "adfLive" && !body[k] && data.controls[k] !== false);
+    const turningOff = Object.keys(body).filter((k) => k !== "adfLive" && !body[k] && data.controls[k] !== false && !inputs[k].disabled);
     if (body.adfLive && !data.controls.adfLive && !await confirmDialog({ title: `Send real leads to ${data.store.name}?`, text: `From now on, new leads, appointments and car-sold alerts for this dealership are e-mailed to ${adfTo || "its ADF address"}. Other dealers stay in test mode.`, okLabel: "Switch ADF live" })) return;
     if (turningOff.length && !await confirmDialog({ title: `Switch off for ${data.store.name}?`, text: turningOff.map((k) => `${CONTROL_INFO[k][0]}: ${CONTROL_INFO[k][1]}`).join("\n\n"), okLabel: "Switch off" })) return;
     save.disabled = true;
