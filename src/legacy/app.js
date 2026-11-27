@@ -1,6 +1,7 @@
 // PORTED by scripts/port-legacy.mjs from autopulse-connect-hub/public/assets/app.js — edit the port script, not this file.
 import { legacyFetch } from "@/lib/legacyFetch";
 import { openLiveEvents } from "@/lib/liveEvents";
+import { initFormChecks, markServerField } from "./form-check.js";
 // Dates and times in the person's chosen time zone (New York by default). First, before anything formats a date.
 import { BROWSER_TIME_ZONE, TIME_ZONE_CHOICES, currentTimeZone, setAppTimeZone } from "./tz.js";
 import { EMOJI_CATS, emojiKeywords, searchEmojis } from "./emoji.js";
@@ -90,9 +91,8 @@ async function api(path, options = {}) {
     const me = await legacyFetch("/api/me", { credentials: "same-origin", headers: state.sessionToken ? { "X-Session-Token": state.sessionToken } : {} }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     if (!me?.user) { window.location.replace("/login"); throw error; }
     if (state.me && me.user.id !== state.me.id) {
-      toast(`You signed in as ${me.user.displayName || me.user.username} in another tab of this browser. This page now opens as that account.`, "warn");
-      setTimeout(() => window.location.reload(), 2500);
-      throw new Error("Signed in as another account in another tab");
+      setTimeout(() => window.location.reload(), 3000);
+      throw new Error(`You signed in as ${me.user.displayName || me.user.username} in another tab of this browser, so nothing was changed here. This page now opens as that account.`);
     }
     state.csrf = me.csrfToken;
     return apiOnce(path, options);
@@ -119,6 +119,7 @@ async function apiOnce(path, { method = "GET", body } = {}) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const error = new Error(data.error || `Request failed (${res.status})`);
+    if (res.status === 400 && data.field) markServerField(data); // mark the wrong field on the form just sent
     if (res.status === 403 && /csrf/i.test(String(data.error || ""))) error.csrf = true;
     throw error;
   }
@@ -3533,6 +3534,7 @@ async function init() {
   if (["admin", "manager"].includes(me.user.role) || ["superadmin", "agency", "dealer", "owner"].includes(accountKind())) {
     document.querySelectorAll(".manager-only").forEach((el) => { el.hidden = false; });
   }
+  initFormChecks();
   wire();
   setupRail();
   initAccount({ $, h, api, toast, state });
