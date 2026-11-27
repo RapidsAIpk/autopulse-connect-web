@@ -19,6 +19,7 @@ const NOTICES: Record<string, ["notice" | "error", string]> = {
   verified: ["notice", "E-mail confirmed. Sign in to start."],
   expired: ["error", "That confirmation link has expired or was already used. Sign in to get a new one."],
   google: ["error", "Google sign-in did not finish. Try again, or use your e-mail and password."],
+  linkedin: ["error", "LinkedIn sign-in did not finish. Try again, or use your e-mail and password."],
   disabled: ["error", "This account is turned off. Contact your administrator."],
   notconnected: ["error", "Your dealership isn't subscribed to AutoPulse Connect. Please contact AutoPulse."],
 };
@@ -225,7 +226,7 @@ export function LoginView() {
                 {busy ? "Signing in…" : "Sign in"}
               </button>
             </form>
-            <div className="auth-or" id="google-or" hidden={!options?.google}>
+            <div className="auth-or" id="google-or" hidden={!options?.google && !options?.linkedin}>
               <span>or</span>
             </div>
             <a className="btn btn-block google-btn" id="google-btn" href="/auth/google" hidden={!options?.google}>
@@ -236,6 +237,13 @@ export function LoginView() {
                 <path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z" />
               </svg>
               Sign in with Google
+            </a>
+            <a className="btn btn-block google-btn" id="linkedin-btn" href="/auth/linkedin" hidden={!options?.linkedin}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+                <rect width="24" height="24" rx="4" fill="#0A66C2" />
+                <path fill="#fff" d="M7.1 9.6h2.6V18H7.1zM8.4 5.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM11.3 9.6h2.5v1.2h.1c.3-.7 1.2-1.4 2.6-1.4 2.7 0 3.2 1.8 3.2 4.1V18h-2.6v-4c0-1 0-2.2-1.3-2.2s-1.6 1-1.6 2.1V18h-2.6z" />
+              </svg>
+              Sign in with LinkedIn
             </a>
             <p className="fineprint" id="signup-line" hidden={!options?.signup}>
               New dealer? <a href="/signup">Create an account</a> · <a href="/demo">Request a demo</a>

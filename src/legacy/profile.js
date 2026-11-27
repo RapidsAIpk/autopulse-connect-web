@@ -364,6 +364,13 @@ function paintWidget(data) {
   if (!form) return;
   const w = data.widget;
   $("widget-embed").value = data.embedCode || "";
+  // This dealership's setup guide (PDF): its own code, where to add it, sign-in and features. Owners and admins.
+  const copyBtn = $("widget-embed-copy");
+  const kind = ctx.state?.me?.crmAccount || "";
+  const mayGuide = kind === "owner" || kind === "dealer" || kind === "superadmin" || ctx.state?.me?.role === "admin" || Boolean(ctx.state?.impersonatedBy);
+  if (copyBtn && mayGuide && !$("widget-guide-pdf")) {
+    copyBtn.insertAdjacentElement("afterend", h("button", { type: "button", class: "btn btn-sm", id: "widget-guide-pdf", onclick: () => downloadFile("/api/store-widget/setup-guide", "AutoPulse-Setup-Guide.pdf", ctx.toast), "data-tip": "Step-by-step PDF for this dealership: the chat code, where and how to add it, sign-in and features. Send it to your web person." }, "Download setup guide (PDF)"));
+  }
   $("widget-test-link").href = data.testUrl || "#";
   for (const f of ["botName", "welcome", "closedMessage", "whatsapp", "messenger", "instagram"]) form[f].value = w[f] || "";
   form.position.value = w.position || "right";
@@ -469,5 +476,30 @@ export async function loadWidgetPanel() {
       ? "This store has no website yet, so it has no website chat. Add the store's website (in the AutoPulse CRM for CRM dealers, or under Store details), then come back here for the chat code."
       : `The website chat settings could not be loaded: ${error?.message || "try again"}`;
     note.hidden = false;
+  }
+}
+
+/** Downloads a file from the API with this tab's session (tab sessions send X-Session-Token, not the cookie). */
+async function downloadFile(url, fallbackName, toast) {
+  try {
+    const headers = {};
+    let token = "";
+    try { token = sessionStorage.getItem("autopulse.sessionToken") || ""; } catch {}
+    if (token) headers["X-Session-Token"] = token;
+    const res = await fetch(url, { credentials: "same-origin", headers });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || data.message || `Download failed (${res.status})`);
+    }
+    const name = /filename="([^"]+)"/.exec(res.headers.get("content-disposition") || "")?.[1] || fallbackName;
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  } catch (error) {
+    toast?.(error.message, "error");
   }
 }
