@@ -1763,3 +1763,6 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 .restrictions-txt { display: grid; gap: 3px; font-size: 13px; }
 .restrictions-txt ul { margin: 0; padding-left: 18px; }
 .restrictions-txt small { color: var(--text-2); }
+
+/* Team page: a CRM dealer's person shows their AutoPulse CRM role under the Connect role */
+.crm-role { display: block; margin-top: 3px; font-size: 11px; color: var(--text-2); }

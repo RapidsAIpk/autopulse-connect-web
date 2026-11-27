@@ -44,9 +44,11 @@ export function applyStoreKind() {
   const store = ctx.state?.store || {};
   for (const view of ["staff", "pages"]) {
     const rail = document.querySelector(`.rail-btn[data-view="${view}"]`);
-    if (rail && !store.hasTeam) rail.hidden = true;
+    // The Team page also exists for AutoPulse CRM dealers (their team comes from the CRM).
+    if (rail && !store.hasTeam && !(view === "staff" && store.crmTeam)) rail.hidden = true;
   }
   if (store.hasTeam) { loadTeam(); loadStorePage(); loadMyPage(); }
+  else if (store.crmTeam) loadTeam();
   else { data = null; for (const id of ["team-panel", "departments-panel", "roles-panel", "store-page-panel", "my-page-panel"]) { const n = $(id); if (n) n.hidden = true; } }
   if (store.inboxOnly) { loadAiProfile(); loadStoreSettings(); }
   else { for (const id of ["ai-profile-panel", "notify-panel"]) { const n = $(id); if (n) n.hidden = true; } const ro = $("route-options"); if (ro) ro.hidden = true; }
@@ -295,6 +297,18 @@ export async function loadTeam() {
   if (rail) rail.hidden = !data;
   ctx.refreshTabs?.();
   if (!data) return;
+  // AutoPulse CRM dealer: people come from the CRM (added / removed there); Connect keeps role, departments, on/off.
+  let note = document.getElementById("team-crm-note");
+  if (!note) { note = ctx.h("p", { id: "team-crm-note", class: "callout" }); $("team-panel").querySelector(".records-table, table")?.before(note); }
+  note.hidden = !data.crm;
+  if (data.crm) {
+    note.textContent = `This team comes from AutoPulse CRM: people are added and removed there, and sign in with their AutoPulse CRM login. Here you can set their Connect role and departments, or turn someone off in Connect only.${data.syncedAt ? ` Last updated from the CRM ${ago(data.syncedAt).toLowerCase()}.` : ""}`;
+    $("team-add-btn").hidden = true;
+    paintTeam();
+    paintDepartments();
+    loadRoles();
+    return;
+  }
   $("team-add-btn").hidden = !data.you.canManage;
   // Store controls: AutoPulse switched team invites off for this store.
   const invitesOff = (document.body.dataset.featuresOff || "").split(" ").includes("invites");
@@ -317,6 +331,7 @@ function ago(ts) {
 }
 
 function statusOf(m) {
+  if (m.removedInCrm) return ["Removed in AutoPulse CRM", "promo"];
   if (m.disabled) return ["Turned off", "promo"];
   if (m.invited) return ["Invite sent", "unreplied"];
   if (m.mustChangePassword) return ["Temporary password", "human"];
@@ -335,7 +350,13 @@ function paintTeam() {
   $("team-body").replaceChildren(...data.team.map((m) => {
     const [status, tone] = statusOf(m);
     const acts = [];
-    if (mayChange(m)) {
+    if (mayChange(m) && data.crm) {
+      // CRM team: Connect role / departments, and on / off in Connect only.
+      if (!m.removedInCrm) {
+        acts.push(h("button", { type: "button", class: "btn btn-sm", text: "Edit", onclick: () => openMember(m) }));
+        acts.push(h("button", { type: "button", class: "btn btn-sm", text: m.disabled ? "Turn on" : "Turn off", onclick: () => rowAction(m, "toggle") }));
+      }
+    } else if (mayChange(m)) {
       acts.push(h("button", { type: "button", class: "btn btn-sm", text: "Edit", onclick: () => openMember(m) }));
       const more = h("select", { class: "btn btn-sm", "aria-label": `More for ${m.name}` },
         h("option", { value: "", text: "More…" }),
@@ -348,7 +369,8 @@ function paintTeam() {
     }
     return h("tr", {},
       h("td", {}, h("div", { class: "who" }, h("strong", { text: m.name + (m.id === data.you.id ? " (you)" : "") }), h("small", { text: [m.title, m.email].filter(Boolean).join(" · ") }))),
-      h("td", {}, h("span", { class: `tag role-${m.role}`, text: ROLE_LABEL[m.role] })),
+      h("td", {}, h("span", { class: `tag role-${m.role}`, text: ROLE_LABEL[m.role], "data-tip": m.roleSetInConnect ? "Set in Connect (overrides the AutoPulse CRM role)" : m.source === "crm" ? "From the AutoPulse CRM role's permissions" : "" }),
+        m.crmRole ? h("small", { class: "crm-role", text: `CRM: ${m.crmRole}`, "data-tip": "This person's role in AutoPulse CRM" }) : null),
       h("td", {}, m.role === "owner" ? h("span", { class: "muted", text: "All" }) : chips(m.departments.map(deptLabel))),
       h("td", {}, m.role === "owner" ? h("span", { class: "muted", text: "All" }) : chips((m.stores || []).map(storeName))),
       h("td", {}, h("span", { class: `tag ${tone}`, text: status })),
@@ -377,15 +399,19 @@ function openMember(member) {
   showErr("member-error", "");
   $("member-title").textContent = member ? `Edit ${member.name}` : "Add person";
   $("member-submit").textContent = member ? "Save" : "Add person";
-  for (const key of ["name", "email", "phone", "title"]) form.elements[key].value = member?.[key] || "";
+  for (const key of ["name", "email", "phone", "title"]) {
+    form.elements[key].value = member?.[key] || "";
+    // CRM people: name, e-mail and phone come from AutoPulse CRM.
+    form.elements[key].disabled = Boolean(data.crm);
+  }
   const roleSel = $("member-role");
   for (const opt of roleSel.options) opt.hidden = !data.roles.includes(opt.value);
   roleSel.value = member?.role && data.roles.includes(member.role) ? member.role : "agent";
   const offered = data.departments.filter((d) => data.storeDepartments.includes(d.id) || member?.departments.includes(d.id));
   checks($("member-departments"), offered, member?.departments || [], "departments");
   checks($("member-stores"), data.stores, member?.stores || (data.stores.length === 1 ? [data.stores[0].id] : []), "stores");
-  $("member-stores-set").hidden = data.stores.length < 2 && !member;
-  $("member-access-set").hidden = Boolean(member);
+  $("member-stores-set").hidden = Boolean(data.crm) || (data.stores.length < 2 && !member);
+  $("member-access-set").hidden = Boolean(member) || Boolean(data.crm);
   paintMethod();
   $("member-dialog").showModal();
 }
@@ -411,7 +437,12 @@ async function saveMember(event) {
   };
   if (!body.stores.length && data.stores.length === 1) body.stores = [data.stores[0].id];
   try {
-    if (editing) {
+    if (editing && data.crm) {
+      // CRM people: only the Connect role and departments are set here.
+      await api(`/api/team/${editing.id}`, { method: "PATCH", body: { role: body.role, departments: body.departments } });
+      $("member-dialog").close();
+      toast("Saved in Connect (AutoPulse CRM is not changed)", "success");
+    } else if (editing) {
       await api(`/api/team/${editing.id}`, { method: "PATCH", body });
       $("member-dialog").close();
       toast("Saved", "success");
@@ -441,7 +472,9 @@ async function rowAction(m, action) {
       await api(`/api/team/${m.id}/invite`, { method: "POST", body: {} });
       toast(`Invite e-mailed again to ${m.email}`, "success");
     } else if (action === "toggle") {
-      if (!m.disabled && !await confirmDialog({ title: `Turn off ${m.name}?`, text: "They are signed out and cannot sign in until turned on again. Chats they hold go back to the team.", okLabel: "Turn off" })) return;
+      if (!m.disabled && !await confirmDialog({ title: `Turn off ${m.name}?`, text: data.crm
+        ? "They are signed out of AutoPulse Connect and can't sign in to it until turned on again. Chats they hold go back to the team. Nothing changes in AutoPulse CRM."
+        : "They are signed out and cannot sign in until turned on again. Chats they hold go back to the team.", okLabel: "Turn off" })) return;
       await api(`/api/team/${m.id}`, { method: "PATCH", body: { disabled: !m.disabled } });
       toast(m.disabled ? `${m.name} is on again` : `${m.name} is turned off`, "success");
     } else if (action === "remove") {
@@ -459,7 +492,8 @@ function paintDepartments() {
   const { $ } = ctx;
   checks($("departments-checks"), data.departments, data.storeDepartments, "enabled");
   const can = data.you.canManage;
-  for (const input of $("departments-checks").querySelectorAll("input")) input.disabled = !can;
+  // CRM dealer: each person's departments come from AutoPulse CRM; only chat routing is set here.
+  for (const input of $("departments-checks").querySelectorAll("input")) input.disabled = !can || Boolean(data.crm);
   $("route-chats").checked = data.routeChats !== false;
   $("route-chats").disabled = !can;
   $("departments-save").hidden = !can;
@@ -473,6 +507,7 @@ async function saveDepartments(event) {
   try {
     const res = await api("/api/dealership/departments", { method: "POST", body: { enabled, routeChats: ctx.$("route-chats").checked } });
     data.routeChats = res.routeChats;
+    if (data.crm) { toast(res.routeChats ? "New chats are routed to the team" : "New chats wait in the queue", "success"); return; }
     await saveRouting();
     data.storeDepartments = res.enabled;
     toast("Departments saved. The website chat shows them from the next visit.", "success");
