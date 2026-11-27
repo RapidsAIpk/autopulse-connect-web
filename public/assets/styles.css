@@ -1063,7 +1063,8 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .settings-grid[data-active="emails"] > [data-stab="emails"]:not([hidden]),
 .settings-grid[data-active="channels"] > [data-stab="channels"]:not([hidden]),
 .settings-grid[data-active="site"] > [data-stab="site"]:not([hidden]),
-.settings-grid[data-active="team"] > [data-stab="team"]:not([hidden]) { display: block; }
+.settings-grid[data-active="team"] > [data-stab="team"]:not([hidden]),
+.settings-grid[data-active="billing"] > [data-stab="billing"]:not([hidden]) { display: block; }
 /* Team tab: the team table across the page, departments under it */
 .settings-grid[data-active="team"] { columns: 1; }
 .settings-grid[data-active="team"] > .panel { max-width: 1120px; }
@@ -1770,3 +1771,39 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 /* Team page of a CRM dealer: where each person comes from */
 .src-pill { display: inline-block; width: fit-content; margin-top: 4px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; border: 1px solid var(--line-2); color: var(--text-2); }
 .src-pill.connect { color: var(--accent); border-color: var(--accent-line, var(--line-2)); }
+
+/* ---------- Billing (Settings → Billing, Settings → AutoPulse site → Billing, Stores → Billing & payments) ---------- */
+.billing-summary { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.billing-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.billing-kv { display: grid; gap: 6px; }
+.billing-kv .kv { grid-template-columns: minmax(110px, auto) 1fr; align-items: baseline; }
+.billing-plans { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.billing-plan { display: grid; gap: 8px; align-content: start; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.billing-plan-name { font-size: 15px; }
+.billing-price span { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.billing-price em { font-style: normal; color: var(--muted); }
+.billing-plan .btn { justify-self: start; }
+.billing-block { padding-top: 6px; border-top: 1px solid var(--line); }
+.billing-block:first-of-type { border-top: 0; }
+.billing-table td, .billing-table th { white-space: nowrap; }
+.billing-table td:last-child { display: flex; gap: 6px; justify-content: flex-end; }
+.billing-table tr.is-void td { text-decoration: line-through; opacity: .6; }
+.billing-table tr.is-void td:last-child { text-decoration: none; }
+.billing-request { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.billing-request p { margin: 4px 0 0; }
+.billing-add > summary { list-style: none; display: inline-flex; cursor: pointer; }
+.billing-add > summary::-webkit-details-marker { display: none; }
+.billing-add[open] > summary { margin-bottom: 10px; }
+.billing-history { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); display: grid; gap: 2px; }
+.billing-dialog { width: min(820px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; }
+.billing-line { margin-top: 3px; font-size: 11.5px; }
+.btn-danger-outline { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+.btn-danger-outline:hover { background: var(--danger-soft); }
+.btn.is-busy { opacity: .6; cursor: progress; }
+.paused-card-wide { max-width: 760px; text-align: left; }
+.paused-card-wide h2, .paused-card-wide > p { text-align: center; }
+.paused-billing { text-align: left; }
+@media (max-width: 640px) {
+  .billing-table td, .billing-table th { white-space: normal; }
+  .billing-kv .kv { grid-template-columns: 1fr; gap: 2px; }
+}
