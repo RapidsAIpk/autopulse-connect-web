@@ -111,7 +111,7 @@ function paymentsTable(payments, { admin = false, storeId = "", reload = null } 
         admin && p.source === "manual" && p.status !== "refunded" ? h("button", { type: "button", class: "btn btn-sm", text: "Not received", onclick: async () => {
           if (!(await confirmDialog({ title: "Mark as not received?", text: `${p.amount} on ${day(p.paidAt)} stays in the list, crossed out.`, okLabel: "Mark" }))) return;
           try { await api(`/api/admin/billing/stores/${enc(storeId)}/payments/${enc(p.id)}`, { method: "DELETE" }); toast("Marked", "success"); reload?.(); } catch (error) { toast(error.message, "error"); }
-        } }) : null)))))));
+        } }) : null))))));
 }
 
 function field(label, input, hint) {
