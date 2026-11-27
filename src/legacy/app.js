@@ -2897,16 +2897,29 @@ function wire() {
     const raw = e.target.value;
     if (!raw || raw === String(state.dealership?.id || "")) return;
     const body = state.crm || !/^\d+$/.test(raw) ? { crmId: raw } : { id: Number(raw) };
+    const allStores = state.dealerships?.length ? state.dealerships : null;
+    let next;
     try {
-      const next = await api("/api/dealerships/current", { method: "POST", body });
-      if (next.crm) state.crm = true;
-      state.active = null;
-      state.messages = [];
-      $("messages")?.replaceChildren();
-      applyDealership(next.dealership, next.dealerships);
-      applyAiInbound(next.aiInboundEnabled, next.aiPlatforms, next.aiTakeoverMinutes);
-      // Pages with their own store picker (Dashboard) go back to following the store being viewed.
-      document.dispatchEvent(new CustomEvent("dealership:switched", { detail: { id: next.dealership?.id } }));
+      next = await api("/api/dealerships/current", { method: "POST", body });
+    } catch (error) {
+      // The switch did not happen: keep every store in the menu and show the one still being viewed.
+      if (allStores) fillDealershipSwitch(allStores);
+      else e.target.value = String(state.dealership?.id || "");
+      toast(error.message, "error");
+      return;
+    }
+    if (next.crm) state.crm = true;
+    state.active = null;
+    state.messages = [];
+    $("messages")?.replaceChildren();
+    // The menu always lists every store: if the reply came back short, keep the list we already had.
+    const stores = (next.dealerships || []).length >= (allStores || []).length ? next.dealerships : allStores;
+    applyDealership(next.dealership, stores);
+    applyAiInbound(next.aiInboundEnabled, next.aiPlatforms, next.aiTakeoverMinutes);
+    // Pages with their own store picker (Dashboard) go back to following the store being viewed.
+    document.dispatchEvent(new CustomEvent("dealership:switched", { detail: { id: next.dealership?.id } }));
+    toast(`Viewing ${next.dealership.dealershipName}`, "success");
+    try {
       await Promise.all([loadContacts(), loadStats(), loadAssignableStaff()]);
       // The new store may be another kind (inbox-only or AutoPulse CRM): refresh which pages and panels apply.
       const me = await api("/api/me").catch(() => null);
@@ -2915,10 +2928,9 @@ function wire() {
       const stillThere = document.querySelector(`.rail-btn[data-view="${state.view}"]`);
       if (stillThere?.hidden) showView("dashboard");
       else if (state.view !== "inbox") showView(state.view); // Leads, Conversations, Vehicles, Dashboard… follow the switch too
-      toast(`Viewing ${next.dealership.dealershipName}`, "success");
     } catch (error) {
-      fillDealershipSwitch(state.dealership ? [state.dealership] : []);
-      toast(error.message, "error");
+      // Switched, but a list did not reload: say so; the store menu stays complete.
+      toast(`Now viewing ${next.dealership.dealershipName}, but some data did not load: ${error.message}`, "warn");
     }
   });
 
