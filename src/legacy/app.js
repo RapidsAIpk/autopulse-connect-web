@@ -2424,7 +2424,10 @@ async function loadUsers() {
         h("td", { text: dateTime(u.lastLoginAt) }),
         h("td", {}, h("span", { class: `status-dot${u.disabled ? " off" : ""}`, text: u.disabled ? "Disabled" : "Active" })),
         h("td", {}, h("div", { class: "actions" },
-          h("button", { class: "btn btn-sm", type: "button", text: "Reset password", onclick: () => resetPassword(u) }),
+          // AutoPulse CRM users sign in with their AutoPulse CRM password: it is changed in AutoPulse CRM, not here.
+          u.crmUserId
+            ? h("span", { class: "muted small", title: "This person signs in with their AutoPulse CRM password. Change it in AutoPulse CRM.", text: "Password: AutoPulse CRM" })
+            : h("button", { class: "btn btn-sm", type: "button", text: "Reset password", onclick: () => resetPassword(u) }),
           self ? null : h("button", { class: "btn btn-sm", type: "button", text: u.disabled ? "Enable" : "Disable", onclick: () => toggleUser(u) }),
           self ? null : h("button", { class: "btn btn-sm btn-danger", type: "button", text: "Delete", onclick: () => deleteUser(u) })))));
     }
