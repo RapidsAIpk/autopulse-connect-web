@@ -440,9 +440,24 @@ export async function loadWidgetPanel() {
   const panel = ctx.$("widget-panel");
   let note = document.getElementById("widget-no-site");
   try {
-    paintWidget(await ctx.api("/api/store-widget"));
+    const data = await ctx.api("/api/store-widget");
+    paintWidget(data);
     panel.hidden = false;
     if (note) note.hidden = true;
+    // Store controls: say which website chat features AutoPulse switched off for this store.
+    const c = data.controls || {};
+    const offList = [
+      c.chat === false && "the website chat itself",
+      (c.ai === false || c.aiWebsite === false) && "AI replies in the chat (your team still replies)",
+      c.popups === false && "pop-ups",
+      c.cars === false && "the Cars tab and car pages",
+      c.booking === false && "booking a visit",
+      c.tracking === false && "visitor tracking",
+    ].filter(Boolean);
+    let locked = document.getElementById("widget-locked");
+    if (!locked) { locked = ctx.h("p", { id: "widget-locked", class: "callout" }); panel.before(locked); }
+    locked.textContent = offList.length ? `Switched off for this dealership by AutoPulse: ${offList.join(", ")}. Contact AutoPulse to turn ${offList.length > 1 ? "them" : "it"} back on.` : "";
+    locked.hidden = !offList.length;
   } catch (error) {
     panel.hidden = true; // no website set for this store
     // Say why the page is empty: the chat lives on the store's website, and this store has none yet.

@@ -903,15 +903,18 @@ function renderAiPlatforms() {
   const master = state.aiInboundEnabled;
   box.replaceChildren(...(state.aiPlatforms || []).map((p) => {
     const input = h("input", { type: "checkbox", "data-platform": p.id });
-    input.checked = p.aiEnabled;
+    // AutoPulse switched the AI off on this channel (Store controls): locked here, the team still replies.
+    const locked = (state.aiOff || []).includes(p.id);
+    input.checked = p.aiEnabled && !locked;
+    input.disabled = locked;
     input.addEventListener("change", () => setAiPlatform(p.id, input.checked, input));
-    const status = !p.connected ? "Not connected" : !master ? "Paused by master switch" : p.aiEnabled ? "AI replying" : "Human only";
-    return h("div", { class: `ai-channel-row${p.connected ? "" : " is-off"}` },
+    const status = locked ? "Off by AutoPulse" : !p.connected ? "Not connected" : !master ? "Paused by master switch" : p.aiEnabled ? "AI replying" : "Human only";
+    return h("div", { class: `ai-channel-row${p.connected ? "" : " is-off"}${locked ? " ai-locked" : ""}` },
       h("div", { class: "ai-channel-name" },
         h("strong", { text: p.label }),
-        h("small", { class: `ai-channel-status${p.aiEnabled && master && p.connected ? " on" : ""}`, text: status }),
+        h("small", { class: `ai-channel-status${locked ? " locked" : p.aiEnabled && master && p.connected ? " on" : ""}`, text: status }),
       ),
-      h("label", { class: "switch", title: `AI replies on ${p.label}` },
+      h("label", { class: "switch", title: locked ? "AutoPulse switched the AI off here. Your team still replies. Contact AutoPulse to turn it back on." : `AI replies on ${p.label}` },
         input,
         h("span", { class: "switch-track" }, h("span", { class: "switch-thumb" })),
       ),
@@ -1327,6 +1330,17 @@ function renderThreadHeader() {
   const botSwitch = $("bot-toggle")?.closest(".switch");
   // Our own widget's website chats are live: the AI can be switched on/off. Copies from the old chatbot app are read-only.
   if (botSwitch) botSwitch.hidden = Boolean(c.isBroadcast || isTwilioRoom(c) || (channelOf(c) === "website" && !isLiveWeb(c.phone)));
+  // AutoPulse switched the AI off on this chat's channel (Store controls): the switch is locked; the team replies.
+  const aiLocked = (state.aiOff || []).includes(channelOf(c));
+  if ($("bot-toggle")) {
+    $("bot-toggle").disabled = aiLocked;
+    if (aiLocked) $("bot-toggle").checked = false;
+  }
+  if (botSwitch) {
+    botSwitch.classList.toggle("is-disabled", aiLocked);
+    if (aiLocked) botSwitch.dataset.tip = "AI is switched off on this channel by AutoPulse. You can still reply.";
+    else delete botSwitch.dataset.tip;
+  }
   renderBroadcastMembers(c);
 
   const note = $("composer-note");
@@ -3496,6 +3510,11 @@ async function init() {
   state.messaging = caps.messaging || {};
   state.metaGroupsSupported = Boolean(caps.platforms?.whatsapp?.groups);
   // Store controls: channels AutoPulse switched off for this store have no Inbox tab.
+  // Store controls: what AutoPulse switched off for this store (shown as "Off by AutoPulse" where it matters).
+  state.aiOff = caps.aiOff || [];
+  state.featuresOff = caps.featuresOff || [];
+  document.body.dataset.featuresOff = state.featuresOff.join(" ");
+  renderAiPlatforms();
   for (const ch of caps.channelsOff || []) { const tab = document.querySelector(`.channel-bar .tab[data-channel="${ch}"]`); if (tab) tab.hidden = true; }
   state.roomsSupported = Boolean(state.metaGroupsSupported || (caps.platforms?.twilio?.groups && state.broadcast));
   syncChannelControls();
