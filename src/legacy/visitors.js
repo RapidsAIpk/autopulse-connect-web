@@ -36,7 +36,17 @@ const hostOf = (url) => { try { return new URL(url).hostname.replace(/^www\./, "
 const carTitle = (v, vin) => v?.title || [v?.year, v?.make, v?.model].filter(Boolean).join(" ") || (vin ? `VIN ${vin}` : "");
 
 export function initVisitors(deps) {
-  ctx = deps;
+
+  // Export menu: open towards whichever side has room (the button can sit at either end of the filter row).
+  const exportBox = document.getElementById("visitors-export");
+  exportBox?.addEventListener("toggle", () => {
+    const menu = exportBox.querySelector(".vis-export-menu");
+    if (!exportBox.open || !menu) return;
+    menu.style.left = "0";
+    menu.style.right = "auto";
+    const box = (exportBox.closest(".panel") || document.body).getBoundingClientRect();
+    if (menu.getBoundingClientRect().right > Math.min(box.right, window.innerWidth) - 4) { menu.style.left = "auto"; menu.style.right = "0"; }
+  });  ctx = deps;
   const { $ } = ctx;
   const form = $("visitors-filters");
   if (!form) return;
