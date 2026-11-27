@@ -114,6 +114,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
       <li><a href="#team">Team and roles</a></li>
       <li><a href="#pages">Pages to share</a></li>
       <li><a href="#settings">Settings</a></li>
+      <li><a href="#subscription">Subscription and switches</a></li>
       <li><a href="#visitor-view">What visitors see</a></li>
       <li><a href="#coming-soon">Coming soon</a></li>
       <li><a href="#tips">Tips and answers</a></li>
@@ -125,7 +126,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
       <div class="eyebrow">User manual</div>
       <h1>AutoPulse Connect, step by step</h1>
       <p class="lede">AutoPulse Connect puts an AI chat on your dealership website, answers customers from your live stock, and brings every conversation, lead and booked visit into one inbox your team works from.</p>
-      <div class="meta"><a href="/">← Back to the app</a><span><b>For</b> dealership owners, managers and sales staff</span><span><b>App</b> AutoPulse Connect (this website)</span><span><b>Edition</b> November 2026</span></div>
+      <div class="meta"><a href="/admin">← Back to the app</a><span><b>For</b> dealership owners, managers and sales staff</span><span><b>App</b> AutoPulse Connect (this website)</span><span><b>Edition</b> November 2026 (updated 28 Nov)</span></div>
     </header>
 
     <section id="how-it-works">
@@ -144,7 +145,8 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
     <section id="sign-in">
       <h2><span class="n">02</span>Signing in</h2>
       <ol class="steps">
-        <li>Open the AutoPulse Connect sign-in page (<a href="/login">Sign in</a> on this website) and enter your e-mail and password.</li>
+        <li>Go to <b>connect.autopulse.ai</b> and press <b>Sign in</b> at the top (or open <a href="/login">the sign-in page</a>). Enter your e-mail and password. The app (your dashboard) opens at <b>connect.autopulse.ai/admin</b>.</li>
+        <li>AutoPulse CRM dealers and their staff sign in with the e-mail and password they use for AutoPulse CRM.</li>
         <li>Dealership owners also get a <b>6-digit sign-in code</b> by e-mail. Type it in and press <b>Verify and sign in</b>.</li>
         <li>New team members sign in with the temporary password they were given, then choose their own password (at least 12 characters).</li>
       </ol>
@@ -160,6 +162,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
         <li><b>Live (top):</b> shows that new chats and messages arrive without reloading the page.</li>
         <li><b>Help:</b> explains the screen you are on. <b>Show me</b> starts a short guided tour. The small <b>?</b> icons explain each panel.</li>
         <li><b>Theme:</b> switches between light and dark. The app remembers your choice.</li>
+        <li><b>Yellow banner (Dashboard and Inbox):</b> appears only when AutoPulse has switched something off for your dealership, and lists it. See <a href="#subscription">Subscription and switches</a>.</li>
       </ul>
       <div class="pair">
         <figure><span class="shot"><img src="/manual/img/28-help.jpg" width="1440" height="950" alt="Help pop-up on the Leads screen" loading="lazy"></span><figcaption>Help explains the screen. Show me starts the tour.</figcaption></figure>
@@ -195,6 +198,15 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
       <p>Type in the box at the bottom and press <kbd>Enter</kbd> (<kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line). The visitor sees your reply in their chat window within a few seconds. When you reply, the AI steps back and the chat is marked <b>Human</b>.</p>
       <p>The switch at the right of the chat header turns the AI on or off for this one chat. If nobody on the team answers for a few minutes, the AI can take over again; you set how long under <a href="#settings">Settings → AI replies</a>.</p>
       <figure><span class="shot"><img src="/manual/img/05-chat-header.jpg" width="832" height="195" alt="Chat header buttons" loading="lazy"></span><figcaption>Chat header: name and tags, search, starred messages, Customer page, Save lead, Book visit, Flag as promo and the AI switch. The chips below show what the visitor did (department, contact form, visits).</figcaption></figure>
+
+      <h3>Who is handling the chat</h3>
+      <p>The bar under the chat header says who has the chat and what that means for you:</p>
+      <ul class="points">
+        <li><b>✓ You're handling this chat:</b> the customer's replies come to you. Use <b>Hand off…</b> when you're done.</li>
+        <li><b>Handled by (name):</b> you can read the chat. Press <b>Ask to take it</b> and they approve or decline. Managers can press <b>Take over</b>.</li>
+        <li><b>Waiting in the (department) queue:</b> nobody has it yet. Press <b>Take this chat</b>.</li>
+        <li><b>Hand off…</b> asks a colleague to take it, transfers it now to a person or a queue (managers), or lets it go back to the queue or to the AI.</li>
+      </ul>
 
       <h3>Save a lead</h3>
       <ol class="steps">
@@ -258,7 +270,11 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
     <section id="vehicles">
       <h2><span class="n">09</span>Vehicles</h2>
       <p class="where">Menu → <b>Vehicles</b></p>
-      <p>Your stock from the AutoPulse car feed. For each car you see its leads, how often it came up in chats, page views, and how many customers tapped Call, Text or WhatsApp on its page.</p>
+      <p>Your cars: from the AutoPulse car feed, your own cars, or both. For each car you see its leads, how often it came up in chats, page views, and how many customers tapped Call, Text or WhatsApp on its page.</p>
+      <ul class="points">
+        <li><b>Inventory:</b> tick <b>AutoPulse feed</b> and/or <b>My own cars</b>. AutoPulse CRM dealers always keep their feed and can add their own cars next to it.</li>
+        <li><b>Add car:</b> type the VIN and the details fill in; add photos and the price, then Save. Your own cars show an <b>OWN</b> tag, with buttons to edit, mark sold or delete them. The AI and the website chat use them straight away.</li>
+      </ul>
       <ul class="points">
         <li>Search by make, model, body, new or used, year, price and miles.</li>
         <li><b>View car</b> opens photos, price, specifications and activity. <b>Copy public link</b> copies the car's page link to send to a customer.</li>
@@ -330,6 +346,13 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
         <figure><span class="shot"><img src="/manual/img/31-team.jpg" width="1440" height="900" alt="Team screen" loading="lazy"></span><figcaption>Team members and departments.</figcaption></figure>
         <figure><span class="shot"><img src="/manual/img/32-add-person.jpg" width="420" height="694" alt="Add person window" loading="lazy"></span><figcaption>Add person.</figcaption></figure>
       </div>
+      <h3>AutoPulse CRM dealers</h3>
+      <p>If your dealership uses AutoPulse CRM, your team comes from the CRM. Everyone appears with their CRM role and is labelled <b>From AutoPulse CRM</b>.</p>
+      <ul class="points">
+        <li>Add or remove these people in AutoPulse CRM; they sign in with their CRM login. Staff whose CRM role can manage employees are <b>Managers</b> here; everyone else is an <b>Agent</b>. Their CRM departments become their queues.</li>
+        <li>Here you can change someone's role or departments for this app only, or turn them off in this app only. <b>Use AutoPulse CRM settings</b> undoes your changes.</li>
+        <li><b>Add person</b> adds someone who uses this app only (not in the CRM), labelled <b>Connect only</b>. They sign in with their e-mail and their own password.</li>
+      </ul>
       <h3>Departments and how chats are shared</h3>
       <p>Tick the departments your website chat offers (Sales, Service, Trade-in, Finance, Parts, Other). With <b>Route new website chats</b> on, a chat goes to someone in the department the visitor picked; if nobody is online it waits in that department's queue and the AI keeps answering.</p>
       <div class="tablewrap"><table class="roles">
@@ -349,6 +372,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
       <ul class="points">
         <li><b>Dealership page:</b> your address, hours, departments, team, cars and a QR code. Choose <b>Private link</b> (opens only with its link) or <b>Public</b>, then press <b>Save</b>.</li>
         <li><b>My page:</b> each person's own page with a <b>Chat with me</b> button. Chats started there come straight to that person.</li>
+        <li>Department contacts on the dealership page include <b>Parts</b>.</li>
         <li>Share the links or QR codes on window stickers, business cards and e-mail signatures.</li>
       </ul>
       <div class="pair">
@@ -364,6 +388,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
         <li><b>My account:</b> your name, photo, phone and address; your <b>time zone</b> (every date and time in the app follows it); and <b>Change password</b> (12 characters or more; your other devices are signed out).</li>
         <li><b>AI replies:</b> the master switch for AI answers in your store, a switch for the <b>Website chat</b> (and for each other channel once connected), and <b>If nobody on the team replies within…</b>, the minutes before the AI takes back a chat a person is handling (or Never).</li>
         <li><b>E-mails &amp; alerts:</b> who gets an e-mail when a chat waits in a queue, a customer asks for a person, or a new lead arrives; and the <b>ADF</b> address your CRM imports leads and visits from.</li>
+        <li><b>Billing</b> (dealership owner): your subscription, plan and paid-until date, payments with invoices, <b>Manage card &amp; invoices</b> and <b>Request cancellation</b>.</li>
       </ul>
       <figure><span class="shot"><img src="/manual/img/25-my-account.jpg" width="1440" height="950" alt="My account settings" loading="lazy"></span><figcaption>My account.</figcaption></figure>
       <div class="pair">
@@ -372,8 +397,18 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
       </div>
     </section>
 
+    <section id="subscription">
+      <h2><span class="n">17</span>Subscription and switches</h2>
+      <ul class="points">
+        <li><b>Subscription:</b> your dealership uses AutoPulse Connect while it is subscribed. If it is not, you see <b>Not subscribed</b> when you sign in, and the chat is hidden from your website. Your chats, leads and settings are kept. Owners can see plans and pay from that screen, or contact AutoPulse.</li>
+        <li><b>Switched off by AutoPulse:</b> AutoPulse can switch parts of the app off for a dealership, for example the AI on one channel, pop-ups, the Cars tab, booking a visit or adding team members. A yellow banner on the Dashboard and Inbox lists what is off; the switches show <b>Off by AutoPulse</b>.</li>
+        <li><b>AI off on a channel:</b> only the AI stops there. Your team can still reply.</li>
+      </ul>
+      <p>Contact AutoPulse to turn anything back on.</p>
+    </section>
+
     <section id="visitor-view">
-      <h2><span class="n">17</span>What visitors see</h2>
+      <h2><span class="n">18</span>What visitors see</h2>
       <p>The chat on your website, from the customer's side.</p>
       <ol class="steps">
         <li>The bubble sits in the corner in your colours. Pop-up messages appear next to it; visitors can close them or turn them off under ⋯.</li>
@@ -393,7 +428,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
     </section>
 
     <section id="coming-soon">
-      <h2><span class="n">18</span>Coming soon</h2>
+      <h2><span class="n">19</span>Coming soon</h2>
       <p>These channels are built into the app and switch on once they are connected for your dealership. Until then their tabs and buttons are hidden or marked <span class="tag soon">Coming soon</span>.</p>
       <div class="soonlist">
         <div><b>WhatsApp</b><br>Chats, new chats, approved templates and broadcast lists.</div>
@@ -404,13 +439,15 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line);
     </section>
 
     <section id="tips">
-      <h2><span class="n">19</span>Tips and answers</h2>
+      <h2><span class="n">20</span>Tips and answers</h2>
       <h3>Can the AI and my team both answer?</h3>
       <p>Yes. The AI answers until someone on your team replies. Then the chat is yours, and the AI only steps back in if nobody answers within the time set under Settings → AI replies.</p>
       <h3>Where do my leads go?</h3>
       <p>They are listed under Leads and e-mailed in ADF format to the address under Settings → E-mails &amp; alerts, so your CRM can import them.</p>
       <h3>How do I see a customer's whole story?</h3>
       <p>Open the chat: the chips under the header show the department, contact form, visits and booked visit. Leads, Appointments and Conversations each link back to the chat.</p>
+      <h3>Why is something greyed out or missing?</h3>
+      <p>Look for the yellow banner on the Dashboard: it lists what AutoPulse switched off for your dealership. Greyed buttons say why when you hover them.</p>
       <h3>Something looks wrong?</h3>
       <p>Press Help on that screen for an explanation, or contact AutoPulse at <b>info@autopulse.ai</b>.</p>
     </section>

@@ -114,8 +114,8 @@ const HELP = {
   },
   inbox: {
     title: "Inbox",
-    body: "Every customer conversation: WhatsApp, SMS, Messenger, Instagram and website chats. The AI answers; your team can take over any chat.",
-    steps: ["Pick a platform in the bar at the top, or 'All platforms'.", "Click a chat on the left to open it.", "Type in the box at the bottom and press Enter to reply.", "Use Broadcast only for recipients with documented opt-in. It can send one approved message to up to 25 Twilio WhatsApp or SMS customers when outreach is enabled. Save them as a reusable list.", "Use Room for a named group of Twilio WhatsApp customers when Twilio outreach permissions are enabled. Each person receives a private message, and replies stay in their own chat.", "Use a broadcast list for a campaign that may include WhatsApp and SMS recipients. A room is for a named Twilio WhatsApp customer group whose messages remain private per customer.", "Eligible Meta Groups API accounts can create invite-only groups, share invite links, remove participants and delete groups. Meta does not provide direct member addition.", "Switch the AI off for a chat with the AI switch in its header.", "Save a lead or book a visit from the buttons in the chat header."],
+    body: "Every customer conversation: WhatsApp, SMS, Messenger, Instagram and website chats. The AI answers; your team can take over any chat. The bar under an open chat says who is handling it and what that means for you.",
+    steps: ["Pick a platform in the bar at the top, or 'All platforms'.", "Click a chat on the left to open it.", "Type in the box at the bottom and press Enter to reply: you now handle the chat and the AI steps back.", "The bar under the chat header: '✓ You're handling this chat', 'Handled by …' (Ask to take it / Take over) or 'Waiting in the … queue' (Take this chat). 'Hand off…' asks a colleague, transfers to a person or a queue, or lets the chat go back to the queue or the AI.", "Use Broadcast only for recipients with documented opt-in. It can send one approved message to up to 25 Twilio WhatsApp or SMS customers when outreach is enabled. Save them as a reusable list.", "A yellow banner at the top lists anything AutoPulse switched off for this store."],
   },
   leads: {
     title: "Leads",
@@ -129,15 +129,15 @@ const HELP = {
   },
   vehicles: {
     title: "Vehicles",
-    body: "The dealer's stock from the AutoPulse car feed, with leads, chat mentions, page views and Call/Text/WhatsApp taps per car.",
-    steps: ["Search or filter by make, model, body, year, price and miles.", "Pick 'All stores' to see every store's cars together.", "Click the car icon for full details; the link icon copies the public car page link."],
+    body: "The store's cars: the AutoPulse car feed, the store's own cars, or both, with leads, chat mentions, page views and Call/Text/WhatsApp taps per car. Own cars carry an OWN tag.",
+    steps: ["Inventory panel: tick 'AutoPulse feed' and/or 'My own cars' (AutoPulse CRM dealers always keep their feed and can add own cars next to it).", "Add car: type the VIN to fill the details, add photos, Save. Own cars have icons to edit, mark sold or delete them.", "Search or filter by make, model, body, year, price and miles; pick 'All stores' to see every store's cars.", "Click the car icon for full details; the link icon copies the public car page link."],
   },
   conversations: {
     title: "Conversations",
     body: "A log of every chat on every channel: first question, messages, follow-ups, session time, clicks and bookings.",
     steps: ["Filter by channel, date or text.", "'Order' sorts by follow-ups or by a type of click.", "Click the eye to read the whole conversation.", "'CSV' gives one row per chat; 'Transcripts CSV' gives every message."],
   },
-  team: { title: "Team", body: "Who can sign in to the inbox, and what they may do. Admin: everything. Manager: the inbox and the store's settings, not the team or system pages. Agent: the inbox.", steps: ["Fill in 'Add member', pick a role and click 'Create account'.", "Change someone's role with the menu in their row (they sign in again to get it).", "Use the buttons in a row to reset a password or disable someone."] },
+  team: { title: "Team", body: "Who can sign in to the inbox, and what they may do. Admin: everything. Manager: the inbox and the store's settings, not the team or system pages. Agent: the inbox. AutoPulse CRM users sign in with their CRM password: change or remove them in AutoPulse CRM; here you can only disable them.", steps: ["Fill in 'Add member', pick a role and click 'Create account'.", "Change someone's role with the menu in their row (they sign in again to get it).", "Use the buttons in a row to reset a password or disable someone. They are signed out at once."] },
   activity: { title: "Activity", body: "The audit log (who did what, when), system status, messages from the public demo and contact forms, and the log of calls to outside services.", steps: ["Page through the audit log with the arrows.", "Under Website enquiries, 'Mark done' when someone has been answered.", "Under Outside services, tick 'Failures only' to see what is failing."] },
   settings: { title: "Settings", body: "Your own account, the AI switches, e-mails and alerts, and (AutoPulse admins) the AutoPulse site. Store details, the website chat, the team and pages have their own pages in the menu.", steps: ["Pick a tab at the top: My account, AI replies, E-mails & alerts, AutoPulse site.", "Each panel has its own Save button.", "Looking for the store, website chat, team or pages? Use the menu on the left."] },
   chatwidget: {
@@ -167,13 +167,13 @@ const HELP = {
   },
   staff: {
     title: "Team",
-    body: "The people who answer this dealership's chats. Owners and managers add agents and managers, choose their departments and stores, and decide how new website chats are shared out.",
-    steps: ["Add person: name, e-mail, role (Agent or Manager), departments and stores. Give them the temporary password shown once, or send an e-mail invite.", "Row → More: new temporary password, resend invite, turn off, remove.", "Departments: tick the ones your store uses; choose 'Next person online' or 'Always the queue' for new website chats.", "What each role can do: the exact rights of Owner, Manager and Agent, checked by the server."],
+    body: "The people who answer this dealership's chats. Connect dealers add their own team. For an AutoPulse CRM dealer, the team comes from AutoPulse CRM (labelled 'From AutoPulse CRM') and you can add Connect-only people next to it.",
+    steps: ["Add person: name, e-mail, role (Agent or Manager), departments and stores. Give them the temporary password shown once, or send an e-mail invite.", "Row → Edit / More: role, departments, new temporary password, resend invite, turn off, remove.", "AutoPulse CRM people: added and removed in the CRM and sign in with their CRM login. Here you set only their Connect role and departments, or turn them off in Connect; 'Use AutoPulse CRM settings' undoes your changes. 'Manage Employee' in the CRM makes a Manager.", "Departments: tick the ones your store uses; choose 'Next person online' or 'Always the queue' for new website chats.", "What each role can do: the exact rights of Owner, Manager and Agent, checked by the server."],
   },
   pages: {
     title: "Pages",
-    body: "A page for the dealership and one for each person, with every way to reach you and a QR code. Every button opens the customer's own app or the website chat, so the customer always writes first.",
-    steps: ["Dealership page: pick Private link or Public, set the address and department contacts, Save, then Open page.", "My page: each person turns on their own page; website chats and WhatsApp/SMS messages that start there go to them.", "Share: copy the link or print the QR code (stickers, cards, e-mail signatures). 'New private link' retires an old link."],
+    body: "A page for the dealership and one for each person, with every way to reach you and a QR code. Every button opens the customer's own app or the website chat, so the customer always writes first. Connect dealers and subscribed AutoPulse CRM dealers have Pages.",
+    steps: ["Dealership page: pick Private link or Public, set the address and department contacts (Parts included), Save, then Open page.", "My page: each person turns on their own page; website chats and WhatsApp/SMS messages that start there go to them.", "Share: copy the link or print the QR code (stickers, cards, e-mail signatures). 'New private link' retires an old link."],
   },
   "team-people": { title: "Team members", body: "Everyone on this dealership's team with role, departments, stores, status and last sign-in. 'Temporary password' means they have not chosen their own yet; 'Invite sent' means they have not opened the invite." },
   "team-roles": { title: "What each role can do", body: "One tick per action and role. The server refuses anything not ticked for your role, and says which role you have." },
@@ -184,9 +184,9 @@ const HELP = {
   "widget-settings": { title: "Website chat settings", body: "The chat's look, welcome message, opening hours, other-app buttons and the embed code for your website." },
   notifications: { title: "Notification e-mails", body: "Who gets an e-mail when a chat is waiting in a queue, a customer asks for a person, or a new lead arrives. In test mode they go to the test inbox." },
   "app-address": { title: "App web address", body: "The address used in every link the app makes. It is checked before saving, so it must already point at this server with HTTPS." },
-  inventory: { title: "Inventory", body: "Where the store's cars come from. 'My own inventory' is for stores not in the AutoPulse feed: add cars, fill them in from the VIN, add photos, import or export a CSV." },
+  inventory: { title: "Inventory", body: "Where the store's cars come from: tick 'AutoPulse feed', 'My own cars' or both. Own cars: add them (the VIN fills the details), add photos, mark them sold, import or export a CSV. AutoPulse CRM dealers always keep their feed." },
   "settings-account": { title: "My account", body: "Your name, photo, phone and address, your template sign-off, and your password." },
-  "settings-ai": { title: "AI replies", body: "Turn AI replies on or off for the whole inbox, or per platform. When off, only your team answers." },
+  "settings-ai": { title: "AI replies", body: "Turn AI replies on or off for the whole inbox, or per platform. When off, only your team answers. A platform marked 'Off by AutoPulse' was switched off by AutoPulse for your store; your team still replies there." },
   "settings-emails": { title: "E-mails & alerts", body: "Notification e-mails for the team (chat waiting, a person asked for, new lead), where leads go as ADF e-mails (the dealer's CRM), and who gets car-sold alerts." },
   popups: {
     title: "Pop-up messages",
@@ -214,9 +214,10 @@ const HELP = {
   "latest-leads": { title: "Latest leads", body: "The five newest leads for the selected store(s)." },
   stores: {
     title: "Stores",
-    body: "Every dealership on AutoPulse: CRM dealers, self sign-up stores, local stores and the test dealership, with contact, subscription and leads.",
-    steps: ["Search or filter by type, subscription or date; 'Filter' applies them.", "'Add store' creates a dealer account with its store; 'Import CSV' adds many at once.", "Use 'Actions…' on a row to open the store in a new tab, edit its details, log in as the dealer, change the password or delete it.", "'CSV' downloads the list. CRM dealers are changed in AutoPulse CRM."],
+    body: "Every dealership on AutoPulse with its type (Connect dealer, CRM only, CRM & Connect; Test tag), whether it is Subscribed (may use Connect), contact and leads. Every store has the same Actions menu; what a store can't do is greyed out and says why.",
+    steps: ["Search or filter by dealer type, subscription or date; 'Filter' applies them.", "'Add store' creates a dealer account with its store; 'Import CSV' adds many at once.", "Actions: open the store, edit its details, Store controls, Billing & payments, Subscribe / Unsubscribe, log in as the dealer, change the password or delete it.", "Subscribe = the store may use Connect (its team signs in, its website chat shows). Every store starts Unsubscribed.", "Store controls: switch the AI off for the store or per channel (the team still replies), switch channels, pop-ups, the Cars tab and car pages, booking, visitor tracking, team invites and sign-in on or off. The dealer sees what you switched off.", "'CSV' downloads the list. CRM dealers' names and staff are changed in AutoPulse CRM."],
   },
+  restrictions: { title: "Switched off by AutoPulse", body: "The yellow banner on the Dashboard and Inbox lists what AutoPulse switched off for this store: not subscribed, sign-in paused, website chat off, channels, the AI on some channels, pop-ups, car pages, booking, tracking or team invites. Dealers: contact AutoPulse to turn them back on. AutoPulse admins: Stores → Actions → Store controls or Subscribe." },
   overview: { title: "AutoPulse overview", body: "Company-wide numbers (AutoPulse admins, 'All stores'): stores, customers, leads, appointments, website chats, session time and website clicks by type. Test stores are left out." },
   outbound: { title: "Outside services", body: "Every call this server made to another service: the car feed, the AI brain, Meta, Twilio, e-mail and maps, with the result and time taken. Use it to see when a service is failing." },
   "messaging-permissions": {
@@ -537,7 +538,7 @@ export function startTour(key) {
 }
 
 // ---------- "Show me in the app" (from the feature & test sheet) ----------
-// The sheet links to /#view=<view>&find={label, sel, panel, hint, note}. app.js opens the screen; here we find
+// The sheet links to /admin#view=<view>&find={label, sel, panel, hint, note}. app.js opens the screen; here we find
 // the button or panel (by id, else by its name inside the named panel), scroll to it and highlight it.
 // If it is not on screen yet (e.g. it needs an open chat), the box says what to do first and offers "Try again".
 const normText = (s) => String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
