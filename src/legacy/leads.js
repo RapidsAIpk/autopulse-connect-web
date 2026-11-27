@@ -1,3 +1,4 @@
+import { ownCarButtons } from "./stock.js";
 // PORTED by scripts/port-legacy.mjs from autopulse-connect-hub/public/assets/leads.js — edit the port script, not this file.
 // Leads and Appointments views (same tabs and columns as the AutoPulse chatbot admin), plus
 // "Save lead" / "Book visit" from a chat and the dealership's ADF e-mail setting.
@@ -652,7 +653,8 @@ function paintVehicles(t, data) {
   $("veh-body").replaceChildren(...(data.items.length ? data.items.map((car) => h("tr", {},
     h("td", {}, h("div", { class: "car-cell" },
       car.image ? h("img", { src: car.image, alt: "", loading: "lazy", referrerpolicy: "no-referrer" }) : null,
-      h("span", {}, car.title || "—", car.store ? h("small", { class: "muted car-store", text: car.store }) : null))),
+      h("span", {}, car.title || "—", car.ownId ? h("span", { class: "tag known own-tag", title: "Added in Connect (My own cars)", text: "Own" }) : null,
+        car.store ? h("small", { class: "muted car-store", text: car.store }) : null))),
     h("td", { class: "mono", text: car.vin }),
     h("td", { text: money(car.price) || "Call" }),
     h("td", { text: miles(car.miles) }),
@@ -664,6 +666,7 @@ function paintVehicles(t, data) {
     actionButtons(
       iconButton("View car", CAR, () => openStockCar(car.vin)),
       car.publicUrl ? iconButton("Copy public link", "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1", () => copyLink(car.publicUrl)) : null,
+      ...ownCarButtons(car.ownId),
     ),
   )) : [emptyRow(12, "No cars match these filters.")]));
   $("veh-count").textContent = countText(t, data.total, data.items.length).replace("records", "cars");
