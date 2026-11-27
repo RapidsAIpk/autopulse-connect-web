@@ -1766,3 +1766,7 @@ input[type="color"], .field input[type="color"], .address-grid .field input[type
 
 /* Team page: a CRM dealer's person shows their AutoPulse CRM role under the Connect role */
 .crm-role { display: block; margin-top: 3px; font-size: 11px; color: var(--text-2); }
+
+/* Team page of a CRM dealer: where each person comes from */
+.src-pill { display: inline-block; width: fit-content; margin-top: 4px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; border: 1px solid var(--line-2); color: var(--text-2); }
+.src-pill.connect { color: var(--accent); border-color: var(--accent-line, var(--line-2)); }
