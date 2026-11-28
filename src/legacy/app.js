@@ -660,6 +660,14 @@ const isSuperAdmin = () => accountKind() === "superadmin" && !state.impersonated
  * Store controls: what AutoPulse switched off for this store, on the Dashboard and the Inbox. The dealer's team
  * learns why something is missing; an AutoPulse admin viewing the store sees it at a glance and where to change it.
  */
+/** What the AI does next in this chat, in one sentence (the minutes come from Settings → AI replies). */
+function aiPauseText(c) {
+  const n = state.aiTakeoverMinutes || 3;
+  return c.botEnabled
+    ? `If you reply, the AI steps back for this chat so the customer doesn't get two answers; if the customer then waits ${n} min with no reply, the AI answers again.`
+    : `The AI stays quiet while your team handles it. If the customer writes and nobody replies within ${n} min, the AI answers. Turn AI on to hand it back (it answers any waiting message).`;
+}
+
 function renderRestrictions() {
   // Shown as a ⚠ chip in the top bar with a popup and the admin's reasons (clarity.js); old banners stay hidden.
   for (const bar of document.querySelectorAll(".restrictions-bar")) bar.hidden = true;
@@ -1392,9 +1400,9 @@ function renderThreadHeader() {
   } else if (channel === "website" && isLiveWeb(c.phone)) {
     note.hidden = false;
     const quiet = !c.lastInboundAt || Date.now() - Number(c.lastInboundAt) > 24 * 60 * 60 * 1000;
-    note.textContent = quiet
-      ? "Live chat from the dealer's website. The visitor has not written in the last 24 hours: your reply is saved and they see it when they come back to the website."
-      : "Live chat from the dealer's website. Your reply appears in the visitor's chat window right away.";
+    note.replaceChildren(quiet
+      ? "Live chat from the dealer's website. The visitor has not written in the last 24 hours: your reply is saved and they see it when they come back to the website. "
+      : "Live chat from the dealer's website. Your reply appears in the visitor's chat window right away. ", aiPauseText(c), " ", aiSettingsLink());
   } else if (website) {
     note.hidden = false;
     note.textContent = "Copy of a chat from the old chatbot app. Read-only: the AI answered it on the website.";
@@ -1428,14 +1436,9 @@ function renderThreadHeader() {
   } else if (c.hasBlocked) {
     note.hidden = false;
     note.textContent = `Flagged as ${flagLabel(c.flag).toLowerCase()} — AI handed this chat to a human. Reply below, or unflag to let AI resume.`;
-  } else if (c.botEnabled) {
-    note.hidden = false;
-    const n = state.aiTakeoverMinutes || 3;
-    note.replaceChildren(`AI is replying to this chat. If you reply, the AI steps back for this chat so the customer doesn't get two answers; if the customer then waits ${n} min with no reply, the AI answers again. `, aiSettingsLink());
   } else {
     note.hidden = false;
-    const n = state.aiTakeoverMinutes || 3;
-    note.replaceChildren(`You're handling this chat: the AI stays quiet. If the customer writes and nobody replies within ${n} min, the AI answers. Turn AI on to hand it back (it answers any waiting message). `, aiSettingsLink());
+    note.replaceChildren(c.botEnabled ? "AI is replying to this chat. " : "You're handling this chat. ", aiPauseText(c), " ", aiSettingsLink());
   }
   const locked = holdDecision(c) === "request";
   if (locked) {
