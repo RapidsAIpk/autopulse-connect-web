@@ -6,6 +6,8 @@
 let ctx = null;
 const takeovers = new Map(); // chat key → { at, minutes }
 let status = null; // GET /api/store-status
+let noteBtn = null; // the chat header's ⓘ / ⚠ (kept here: it is off the page until a chat opens)
+let notePop = null;
 
 export function initClarity(deps) {
   ctx = deps;
@@ -57,7 +59,6 @@ export function paintTimer(c) {
   let pill = document.getElementById("ai-timer");
   if (!pill) pill = h("span", { class: "ai-timer", id: "ai-timer", tabindex: "0", role: "button" });
   if (pill.parentElement !== meta) meta.append(pill);
-  const noteBtn = document.getElementById("chat-note-btn");
   if (noteBtn && noteBtn.parentElement !== meta) meta.append(noteBtn);
   const t = c ? takeovers.get(c.phone) : null;
   const n = t?.minutes || minutes();
@@ -87,7 +88,7 @@ export function paintTimer(c) {
 function addNoteIcon() {
   const { h } = ctx;
   const note = document.getElementById("composer-note");
-  if (!note || document.getElementById("chat-note-btn")) return;
+  if (!note || noteBtn) return;
   const btn = h("button", { type: "button", class: "chat-note-btn", id: "chat-note-btn", hidden: true, "aria-haspopup": "dialog", "aria-expanded": "false" });
   const pop = h("div", { class: "chat-note-pop", id: "chat-note-pop", role: "dialog", hidden: true });
   pop.append(note); // app.js keeps filling #composer-note; it is now read inside this popover
@@ -95,13 +96,14 @@ function addNoteIcon() {
   btn.addEventListener("click", (e) => { e.stopPropagation(); toggleNotePop(pop.hidden); });
   document.addEventListener("click", (e) => { if (!pop.hidden && !pop.contains(e.target) && e.target !== btn) toggleNotePop(false); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleNotePop(false); });
-  btn._pop = pop;
+  noteBtn = btn;
+  notePop = pop;
   document.body.append(pop);
 }
 
 function toggleNotePop(open) {
-  const btn = document.getElementById("chat-note-btn");
-  const pop = document.getElementById("chat-note-pop");
+  const btn = noteBtn;
+  const pop = notePop;
   if (!btn || !pop) return;
   if (open && !btn.hidden) {
     const r = btn.getBoundingClientRect();
@@ -115,7 +117,7 @@ function toggleNotePop(open) {
 /** Called after the open chat's note is worked out (app.js). */
 export function paintNoteIcon() {
   const note = document.getElementById("composer-note");
-  const btn = document.getElementById("chat-note-btn");
+  const btn = noteBtn;
   const meta = document.querySelector(".thread-meta");
   if (!note || !btn || !meta) return;
   if (btn.parentElement !== meta) meta.append(btn);
