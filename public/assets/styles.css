@@ -2053,3 +2053,4 @@ body[data-view="faqs"] { --page-c: var(--c-teal); } body[data-view="support"] { 
   .thread-head.compact > .thread-actions { grid-column: 1 / -1; grid-row: 2; margin-left: 0; justify-content: flex-start; }
   .hd-row2, .thread-head.compact > .hold-bar { grid-row: 3; }
 }
+.thread-head.compact .thread-meta .pill::before { width: auto; height: auto; background: none; border-radius: 0; box-shadow: none; }
