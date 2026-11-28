@@ -1066,7 +1066,8 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .settings-grid[data-active="channels"] > [data-stab="channels"]:not([hidden]),
 .settings-grid[data-active="site"] > [data-stab="site"]:not([hidden]),
 .settings-grid[data-active="team"] > [data-stab="team"]:not([hidden]),
-.settings-grid[data-active="billing"] > [data-stab="billing"]:not([hidden]) { display: block; }
+.settings-grid[data-active="billing"] > [data-stab="billing"]:not([hidden]),
+.settings-grid[data-active="features"] > [data-stab="features"]:not([hidden]) { display: block; }
 /* Team tab: the team table across the page, departments under it */
 .settings-grid[data-active="team"] { columns: 1; }
 .settings-grid[data-active="team"] > .panel { max-width: 1120px; }

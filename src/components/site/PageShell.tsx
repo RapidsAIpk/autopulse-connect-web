@@ -9,7 +9,7 @@ export function PageShell({
   bodyClass,
   help = true,
   theme = true,
-  stylesheet = "/assets/styles.css?v=118",
+  stylesheet = "/assets/styles.css?v=119",
   robots,
   children,
 }: {
