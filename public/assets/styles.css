@@ -1972,3 +1972,4 @@ body[data-view="faqs"] { --page-c: var(--c-teal); } body[data-view="support"] { 
 .suggest-hint { display: block; margin-top: 4px; font-size: 11.5px; color: var(--accent); }
 /* admin: notes for the dealer in Store controls */
 .ctl-note { width: 100%; margin: 4px 0 8px; font-size: 12.5px; }
+.thread-meta .ai-timer { height: 22px; font-size: 11.5px; margin-left: 4px; }
