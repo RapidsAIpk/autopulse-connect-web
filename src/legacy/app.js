@@ -9,7 +9,7 @@ import { initAccount, loadAccountPanel, loadEnquiries, loadStorePanel, loadWidge
 import { initStores, loadMessaging, loadOutbound, loadSite, loadStores, showImpersonation } from "./stores.js";
 import { billingTabFor, handlePausedReturn, initBilling, loadBillingAdmin, loadBillingPanel, paintPausedBilling } from "./billing.js";
 import { initSignin, loadSignin } from "./signin.js";
-import { initClarity, setTakeover, timerTag, aiSettingsLink, paintTimer, refreshStoreStatus, loadFeatures, syncLinksButton, hideLinksPop } from "./clarity.js";
+import { initClarity, setTakeover, timerTag, aiSettingsLink, paintTimer, refreshStoreStatus, loadFeatures, syncLinksButton, hideLinksPop, paintNoteIcon } from "./clarity.js";
 import { initSupport, mountFaqs, mountSupport, refreshSupportBadge, onSupportEvent, openOverlay } from "./support.js";
 import { applyStoreKind, initTeam, loadAiProfile, loadMyPage, loadStorePage, loadStoreSettings, loadTeam } from "./team.js";
 import { initStock, loadStockPanel } from "./stock.js";
@@ -1445,6 +1445,9 @@ function renderThreadHeader() {
     note.hidden = false;
     note.textContent = `Only ${c.holderName} can reply while they handle this chat. Ask to take it if you need to reply.`;
   }
+  // Shown as an icon in the chat header (click to read), not as a line above the message box (clarity.js).
+  note.dataset.blocked = !canType || locked || website ? "1" : "";
+  paintNoteIcon();
   if ($("template-btn")) $("template-btn").hidden = !canSendTemplate(c) || channelOf(c) !== "twilio" || c.windowOpen || locked;
   const templateTool = $("template-tool");
   if (templateTool) {

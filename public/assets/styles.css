@@ -1974,3 +1974,13 @@ body[data-view="faqs"] { --page-c: var(--c-teal); } body[data-view="support"] { 
 /* admin: notes for the dealer in Store controls */
 .ctl-note { width: 100%; margin: 4px 0 8px; font-size: 12.5px; }
 .thread-meta .ai-timer { height: 22px; font-size: 11.5px; margin-left: 4px; }
+
+/* Top bar ⚠: an icon only (details in its popup). */
+.restrict-chip { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 50%; font-size: 15px; }
+/* Chat note: an icon in the chat header, the text in a popover. */
+.chat-note-btn { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-left: 4px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text-2); font: italic 700 12px/1 Georgia, serif; cursor: pointer; vertical-align: middle; }
+.chat-note-btn:hover { border-color: var(--accent); color: var(--accent); }
+.chat-note-btn.blocked { font-family: inherit; font-style: normal; background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+.chat-note-pop { position: fixed; z-index: 60; width: min(380px, calc(100vw - 24px)); padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--panel); box-shadow: 0 12px 32px rgba(15, 23, 42, .18); }
+.chat-note-pop .composer-note { display: block; font-size: 13px; color: var(--text); line-height: 1.45; }
+.chat-note-pop .ai-settings-link { display: inline-block; margin-top: 6px; margin-left: 0; }
