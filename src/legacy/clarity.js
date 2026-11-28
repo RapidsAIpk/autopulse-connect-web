@@ -49,13 +49,12 @@ function openSettingsTab(tab) {
 /** The pill next to the AI switch: countdown while a customer waits, else what AI off / on means. */
 export function paintTimer(c) {
   const { h } = ctx;
-  const label = document.getElementById("bot-label");
-  if (!label) return;
+  // On the line under the customer's name (the header's button row can be too full to show it).
+  const meta = document.querySelector(".thread-meta");
+  if (!meta) return;
   let pill = document.getElementById("ai-timer");
-  if (!pill) {
-    pill = h("span", { class: "ai-timer", id: "ai-timer", tabindex: "0" });
-    label.closest("label")?.after(pill);
-  }
+  if (!pill) pill = h("span", { class: "ai-timer", id: "ai-timer", tabindex: "0", role: "button" });
+  if (pill.parentElement !== meta) meta.append(pill);
   const t = c ? takeovers.get(c.phone) : null;
   const n = t?.minutes || minutes();
   if (!c || c.isGroup || c.isBroadcast) { pill.hidden = true; return; }
