@@ -1307,10 +1307,10 @@ function renderThreadHeader() {
   }
   const pill = $("t-window");
   if (isLiveWeb(c.phone)) {
-    pill.textContent = c.windowOpen ? "Website · live" : "Website · visitor left";
+    pill.textContent = c.windowOpen ? "Live now" : "Visitor left"; // the channel chip already says Website
     pill.className = `pill ${c.windowOpen ? "open" : "closed"}`;
   } else if (isWeb(c.phone)) {
-    pill.textContent = "Website · read-only";
+    pill.textContent = "Read-only";
     pill.className = "pill";
   } else if (c.isBroadcast || isBroadcast(c.phone)) {
     pill.textContent = `${(c.members || []).length} people`;

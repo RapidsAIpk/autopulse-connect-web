@@ -1984,3 +1984,43 @@ body[data-view="faqs"] { --page-c: var(--c-teal); } body[data-view="support"] { 
 .chat-note-pop { position: fixed; z-index: 60; width: min(380px, calc(100vw - 24px)); padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--panel); box-shadow: 0 12px 32px rgba(15, 23, 42, .18); }
 .chat-note-pop .composer-note { display: block; font-size: 13px; color: var(--text); line-height: 1.45; }
 .chat-note-pop .ai-settings-link { display: inline-block; margin-top: 6px; margin-left: 0; }
+
+/* ---------- compact chat header (28 Nov) ---------- */
+.thread-head.compact { container-type: inline-size; gap: 6px 12px; padding: 10px 16px 8px; }
+.thread-head.compact .thread-title h2 { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.thread-head.compact .thread-meta { gap: 5px; margin-top: 4px; }
+.thread-head.compact .thread-meta .tag, .thread-head.compact .thread-meta .chan-banner, .thread-head.compact .thread-meta .pill { height: 20px; font-size: 10.5px; }
+.thread-head.compact .thread-meta .pill { padding: 0 7px; border-radius: 99px; }
+.thread-head.compact .thread-meta .pill.open::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.thread-head.compact .thread-actions { gap: 4px; flex-wrap: nowrap; }
+.thread-head.compact .thread-actions .icon-btn { width: 32px; height: 32px; border-radius: 9px; color: var(--muted); }
+.thread-head.compact .thread-actions .icon-btn:hover { color: var(--text); background: var(--panel-2); }
+.hd-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px !important; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--text-2, var(--text)); font-weight: 600; text-decoration: none; }
+.hd-btn:hover { border-color: var(--accent); color: var(--accent); }
+.hd-btn svg, .hd-more svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.hd-more svg { stroke-width: 3.2; }
+.hd-lbl { font-size: 12.5px; white-space: nowrap; }
+@container (max-width: 1060px) { .hd-lbl { display: none; } .hd-btn { width: 32px; padding: 0; justify-content: center; } }
+.thread-head.compact .thread-actions .switch { height: 32px; margin-left: 4px; }
+.hd-more-wrap { position: relative; }
+.hd-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; min-width: 200px; padding: 6px; display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--line-2, var(--line)); border-radius: 12px; background: var(--panel); box-shadow: 0 14px 34px rgba(15, 23, 42, .18); }
+.hd-menu .hd-item { display: flex; align-items: center; justify-content: flex-start; width: 100%; height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text); font-size: 13px; font-weight: 550; text-align: left; box-shadow: none; }
+.hd-menu .hd-item:hover { background: var(--panel-2); }
+.hd-menu .hd-item.btn-danger { color: var(--danger); }
+.hd-menu .hd-item.btn-danger:hover { background: var(--danger-soft); }
+.hd-menu .hd-item[hidden] { display: none; }
+/* Activity chips and the "who is handling" line share one slim row under the header. */
+.thread-head.compact .t-activity { order: 20; flex: 1 1 320px; min-width: 0; margin: 0; padding: 7px 0 0; border-top: 1px solid var(--line); gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.thread-head.compact .t-activity::-webkit-scrollbar { display: none; }
+.thread-head.compact .act-chip { height: 24px; padding: 0 9px; font-size: 11.5px; flex: none; }
+.thread-head.compact .hold-bar { order: 21; flex: 1 1 360px; margin: 0; padding: 7px 0 0; gap: 8px; border-top: 1px solid var(--line); flex-wrap: nowrap; }
+.thread-head.compact .t-activity:not([hidden]) ~ .hold-bar { flex: 0 1 auto; }
+.thread-head.compact .hold-status { flex: 1 1 auto; gap: 8px; }
+.thread-head.compact .hold-status .hold-ic { width: 22px; height: 22px; font-size: 12px; }
+.thread-head.compact .hold-status .hold-txt { flex-direction: row; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
+.thread-head.compact .hold-status .hold-txt strong { font-size: 12.5px; }
+.thread-head.compact .hold-status .hold-txt small { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+.thread-head.compact .hold-bar .btn, .thread-head.compact .hold-assign { height: 28px; min-height: 28px; }
+.thread-head.compact .thread-search-bar { order: 22; }
+.thread-head.compact .broadcast-members { order: 23; }
