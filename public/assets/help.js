@@ -12,6 +12,8 @@ const TIPS = {
   "logout-btn": "Sign out of AutoPulse on this device.",
   "help-btn": "Explain the screen you are on, with a short demo.",
   "rail-support": "New answers or questions in Support.",
+  "restrict-chip": "Something is switched off for this store, or the subscription is ending. Click to see what and why.",
+  "links-btn": "Send the store's links: inventory, credit application, trade-in value, website (set in Store → What the AI knows).",
   "dealership-switch": "Which dealership you are looking at. Chats, leads, stock and settings follow this choice.",
   "enable-calls-btn": "Allow this browser to make and receive phone calls with customers.",
   search: "Find a chat by customer name or phone number.",
@@ -126,7 +128,7 @@ const HELP = {
   inbox: {
     title: "Inbox",
     body: "Every customer conversation: WhatsApp, SMS, Messenger, Instagram and website chats. The AI answers; your team can take over any chat. The bar under an open chat says who is handling it and what that means for you.",
-    steps: ["Pick a platform in the bar at the top, or 'All platforms'.", "Click a chat on the left to open it.", "Type in the box at the bottom and press Enter to reply: you now handle the chat and the AI steps back.", "The bar under the chat header: '✓ You're handling this chat', 'Handled by …' (Ask to take it / Take over) or 'Waiting in the … queue' (Take this chat). 'Hand off…' asks a colleague, transfers to a person or a queue, or lets the chat go back to the queue or the AI.", "Use Broadcast only for recipients with documented opt-in. It can send one approved message to up to 25 Twilio WhatsApp or SMS customers when outreach is enabled. Save them as a reusable list.", "A yellow banner at the top lists anything AutoPulse switched off for this store."],
+    steps: ["Pick a platform in the bar at the top, or 'All platforms'.", "Click a chat on the left to open it.", "Type in the box at the bottom and press Enter to reply: you now handle the chat and the AI steps back.", "The bar under the chat header: '✓ You're handling this chat', 'Handled by …' (Ask to take it / Take over) or 'Waiting in the … queue' (Take this chat). 'Hand off…' asks a colleague, transfers to a person or a queue, or lets the chat go back to the queue or the AI.", "Use Broadcast only for recipients with documented opt-in. It can send one approved message to up to 25 Twilio WhatsApp or SMS customers when outreach is enabled. Save them as a reusable list.", "The ⚠ chip at the top shows anything AutoPulse switched off (and why); click it for details and Settings → Subscription & features.", "Next to the AI switch: 'AI answering', 'AI paused · team handling', or a countdown 'AI answers in 2:41 if no one replies' while a customer waits. Replying stops the countdown. The time is set in Settings → AI replies.", "Turning the AI on answers the customer's waiting message right away.", "The link button next to Inventory sends a store link (inventory, credit application, trade-in, website)."],
   },
   leads: {
     title: "Leads",

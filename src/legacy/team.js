@@ -49,8 +49,10 @@ export function applyStoreKind() {
   }
   if (store.hasTeam || store.crmTeam) { loadTeam(); loadStorePage(); loadMyPage(); }
   else { data = null; for (const id of ["team-panel", "departments-panel", "roles-panel", "store-page-panel", "my-page-panel"]) { const n = $(id); if (n) n.hidden = true; } }
-  if (store.inboxOnly) { loadAiProfile(); loadStoreSettings(); }
-  else { for (const id of ["ai-profile-panel", "notify-panel"]) { const n = $(id); if (n) n.hidden = true; } const ro = $("route-options"); if (ro) ro.hidden = true; }
+  // What the AI knows: every dealership (Connect and AutoPulse CRM); the panel hides itself if the store has none.
+  loadAiProfile();
+  if (store.inboxOnly) loadStoreSettings();
+  else { for (const id of ["notify-panel"]) { const n = $(id); if (n) n.hidden = true; } const ro = $("route-options"); if (ro) ro.hidden = true; }
   ctx.refreshTabs?.();
 }
 
@@ -251,7 +253,19 @@ export async function loadAiProfile() {
   }
   $("ai-profile-panel").hidden = false;
   const form = $("ai-profile-form");
-  for (const k of ["inventory", "credit", "trade", "website"]) form.elements[k].value = p.links[k] || "";
+  // Empty fields are filled with what AutoPulse already knows (AutoPulse CRM, or the store's website): saved on Save.
+  const SOURCE = { crm: "from AutoPulse CRM", store: "from your store's website" };
+  for (const k of ["inventory", "credit", "trade", "website"]) {
+    const field = form.elements[k];
+    const suggested = !p.links[k] && p.suggested?.links?.[k];
+    field.value = p.links[k] || suggested || "";
+    let hint = field.parentElement.querySelector(".suggest-hint");
+    if (suggested) {
+      if (!hint) { hint = document.createElement("small"); hint.className = "suggest-hint"; field.after(hint); }
+      hint.textContent = `Filled in ${SOURCE[p.suggested.source?.[k]] || "for you"}. Press Save to use it.`;
+      hint.hidden = false;
+    } else if (hint) hint.hidden = true;
+  }
   form.elements.about.value = p.about || "";
   for (const el of form.elements) if (el.name) el.disabled = !p.canEdit;
   $("ai-profile-save").hidden = !p.canEdit;
@@ -267,7 +281,8 @@ async function saveAiProfile(event) {
   try {
     const saved = await api("/api/dealership/ai-profile", { method: "POST", body });
     $("ai-profile-preview").textContent = saved.preview || "";
-    toast("Saved. The AI uses these details from the next message.", "success");
+    for (const hint of document.querySelectorAll("#ai-profile-form .suggest-hint")) hint.hidden = true;
+    toast("Saved. The AI uses these details from the next message, and they show in the Inbox (Store links) and the website chat.", "success");
   } catch (error) {
     showErr("ai-profile-error", error.message);
   }

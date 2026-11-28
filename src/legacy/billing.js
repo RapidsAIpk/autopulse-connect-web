@@ -155,6 +155,8 @@ export function dealerBilling(data, { reload }) {
   const out = [];
   if (data.testMode) out.push(h("p", { class: "callout", text: "Test mode: no real money. Pay with card 4242 4242 4242 4242, any future date, any CVC and ZIP." }));
   out.push(summary(b));
+  out.push(ctx.h("p", { class: "muted small" }, "Which features your dealership has, and anything AutoPulse switched off: ",
+    ctx.h("button", { type: "button", class: "link-btn", text: "Subscription & features →", onclick: () => document.querySelector('#settings-tabs [data-stab="features"]')?.click() })));
   const onCard = b.mode === "stripe" && ["active", "trialing", "past_due"].includes(b.status);
   // Pay by card: plans to pick.
   if (!onCard) {

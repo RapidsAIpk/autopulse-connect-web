@@ -285,6 +285,12 @@ async function openControls(s) {
     }
   });
   const pick = (keys) => keys.map((k) => entries.find(([x]) => x === k)).filter(Boolean).map(row);
+  // Why it is off, in the admin's words: the dealer's team sees it in the ⚠ popup and Settings → Subscription & features.
+  const notes = {};
+  const note = (k, what) => {
+    notes[k] = h("input", { type: "text", class: "ctl-note", maxlength: "300", value: data.controls.notes?.[k] || "", placeholder: `Note for the dealer: why ${what} is off (optional)` });
+    return notes[k];
+  };
   // Channels: "Channel" off = nothing in or out there; "AI" off = only the AI stops, the team still replies.
   const sw = (k, label) => {
     inputs[k] = h("input", { type: "checkbox", checked: data.controls[k] !== false, "aria-label": label });
@@ -301,12 +307,14 @@ async function openControls(s) {
     }
   };
   const rows = [
-    h("h4", { class: "ctl-head", text: "Access" }), ...pick(["signin"]),
-    h("h4", { class: "ctl-head", text: "AI" }), ...pick(["ai"]),
+    h("h4", { class: "ctl-head", text: "Access" }), ...pick(["signin"]), note("signin", "sign-in"),
+    h("h4", { class: "ctl-head", text: "AI" }), ...pick(["ai"]), note("ai", "the AI"),
     h("h4", { class: "ctl-head", text: "Channels" }), table,
     h("p", { class: "hint", text: "On: the channel works. AI replies: off stops only the AI on that channel; the team can still reply." }),
+    note("chat", "website chat"), note("channels", "a channel"),
     h("h4", { class: "ctl-head", text: "Website chat features" }), h("div", { class: "ctl-grid" }, ...pick(["popups", "cars", "booking", "tracking"])),
-    h("h4", { class: "ctl-head", text: "Team" }), ...pick(["invites"]),
+    h("h4", { class: "ctl-head", text: "Team" }), ...pick(["invites"]), note("features", "a feature (pop-ups, cars, booking, tracking, team invites)"),
+    h("h4", { class: "ctl-head", text: "Subscription" }), note("subscription", "the subscription"),
     h("h4", { class: "ctl-head", text: "Lead e-mails (ADF)" }),
     h("label", { class: "ctl-row" }, inputs.adfLive, h("span", {}, h("strong", { text: "Send ADF leads to the dealer (live)" }),
       h("em", { text: adfTo
@@ -332,7 +340,7 @@ async function openControls(s) {
     if (turningOff.length && !await confirmDialog({ title: `Switch off for ${data.store.name}?`, text: turningOff.map((k) => `${CONTROL_INFO[k][0]}: ${CONTROL_INFO[k][1]}`).join("\n\n"), okLabel: "Switch off" })) return;
     save.disabled = true;
     try {
-      await api(`/api/admin/stores/${encodeURIComponent(s.id)}/controls`, { method: "POST", body });
+      await api(`/api/admin/stores/${encodeURIComponent(s.id)}/controls`, { method: "POST", body: { ...body, notes: Object.fromEntries(Object.entries(notes).map(([k, el]) => [k, el.value.trim()])) } });
       dialog.close();
       toast("Store controls saved", "success");
       loadStores();
