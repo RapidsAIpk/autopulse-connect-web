@@ -177,8 +177,14 @@ function compactHeader() {
   }
   const toggle = document.querySelector(".thread-actions .switch");
   actions.insertBefore(wrap, toggle || null);
-  const sync = () => { more.hidden = ![...menu.children].some((b) => !b.hidden); if (more.hidden) close(); };
-  const close = () => { menu.hidden = true; more.setAttribute("aria-expanded", "false"); };
+  // Only touch attributes when they change: the observer below watches "hidden" and must not wake itself up.
+  const close = () => { if (!menu.hidden) menu.hidden = true; if (more.getAttribute("aria-expanded") !== "false") more.setAttribute("aria-expanded", "false"); };
+  const sync = (records) => {
+    if (records && !records.some((r) => r.target !== menu)) return;
+    const none = ![...menu.children].some((b) => !b.hidden);
+    if (more.hidden !== none) more.hidden = none;
+    if (none) close();
+  };
   more.addEventListener("click", (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; more.setAttribute("aria-expanded", String(!menu.hidden)); });
   menu.addEventListener("click", () => setTimeout(close, 0));
   document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) close(); });
