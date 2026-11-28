@@ -53,8 +53,8 @@ function openSettingsTab(tab) {
 /** The pill next to the AI switch: countdown while a customer waits, else what AI off / on means. */
 export function paintTimer(c) {
   const { h } = ctx;
-  // On the line under the customer's name (the header's button row can be too full to show it).
-  const meta = document.querySelector(".thread-meta");
+  // In the header's AI slot (right side, before the buttons); falls back to the line under the name.
+  const meta = document.getElementById("hd-ai") || document.querySelector(".thread-meta");
   if (!meta) return;
   let pill = document.getElementById("ai-timer");
   if (!pill) pill = h("span", { class: "ai-timer", id: "ai-timer", tabindex: "0", role: "button" });
@@ -118,7 +118,7 @@ function toggleNotePop(open) {
 export function paintNoteIcon() {
   const note = document.getElementById("composer-note");
   const btn = noteBtn;
-  const meta = document.querySelector(".thread-meta");
+  const meta = document.getElementById("hd-ai") || document.querySelector(".thread-meta");
   if (!note || !btn || !meta) return;
   if (btn.parentElement !== meta) meta.append(btn);
   const text = note.textContent.trim();
@@ -179,6 +179,14 @@ function compactHeader() {
   }
   const toggle = document.querySelector(".thread-actions .switch");
   actions.insertBefore(wrap, toggle || null);
+  // Right side, first: what the AI is doing (pill + ⓘ), then a divider and the buttons.
+  actions.prepend(h("div", { class: "hd-ai", id: "hd-ai" }), h("span", { class: "hd-sep", "aria-hidden": "true" }));
+  // Second line: the chat's tags and website activity in one soft band; who is handling it on the right.
+  const tags = h("div", { class: "hd-tags" });
+  for (const id of ["t-dept", "t-lead", "t-consent"]) { const el = document.getElementById(id); if (el) tags.append(el); }
+  const activity = document.getElementById("t-activity");
+  const row2 = h("div", { class: "hd-row2" }, tags);
+  if (activity) { activity.before(row2); row2.append(activity); } else head.append(row2);
   // Only touch attributes when they change: the observer below watches "hidden" and must not wake itself up.
   const close = () => { if (!menu.hidden) menu.hidden = true; if (more.getAttribute("aria-expanded") !== "false") more.setAttribute("aria-expanded", "false"); };
   const sync = (records) => {

@@ -1985,23 +1985,40 @@ body[data-view="faqs"] { --page-c: var(--c-teal); } body[data-view="support"] { 
 .chat-note-pop .composer-note { display: block; font-size: 13px; color: var(--text); line-height: 1.45; }
 .chat-note-pop .ai-settings-link { display: inline-block; margin-top: 6px; margin-left: 0; }
 
-/* ---------- compact chat header (28 Nov) ---------- */
-.thread-head.compact { container-type: inline-size; gap: 6px 12px; padding: 10px 16px 8px; }
-.thread-head.compact .thread-title h2 { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
-.thread-head.compact .thread-meta { gap: 5px; margin-top: 4px; }
-.thread-head.compact .thread-meta .tag, .thread-head.compact .thread-meta .chan-banner, .thread-head.compact .thread-meta .pill { height: 20px; font-size: 10.5px; }
-.thread-head.compact .thread-meta .pill { padding: 0 7px; border-radius: 99px; }
-.thread-head.compact .thread-meta .pill.open::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.thread-head.compact .thread-actions { gap: 4px; flex-wrap: nowrap; }
-.thread-head.compact .thread-actions .icon-btn { width: 32px; height: 32px; border-radius: 9px; color: var(--muted); }
+/* ---------- chat header (28 Nov): two calm lines ----------
+   [avatar] Name ✎ / Website · Live now · Last seen …          [AI pill ⓘ] | 🔍 ☆ 👤 👤+ 📅 ⋯  [AI switch]
+   [tags · activity chips …]                                              [who is handling · Hand off ▾] */
+.thread-head.compact { container-type: inline-size; display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; column-gap: 0; row-gap: 10px; align-items: center; padding: 12px 18px; }
+.thread-head.compact > .back-btn { grid-column: 1; grid-row: 1; }
+.thread-head.compact > .dp-host { grid-column: 2; grid-row: 1; margin-right: 12px; }
+.thread-head.compact > .thread-title { grid-column: 3; grid-row: 1; min-width: 0; }
+.thread-head.compact > .thread-actions { grid-column: 4; grid-row: 1; margin-left: 16px; gap: 2px; flex-wrap: nowrap; }
+.thread-head.compact .thread-title h2 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+/* Under the name: plain text with dots, no boxes. */
+.thread-head.compact .thread-meta { margin-top: 3px; gap: 0; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; font-size: 12px; color: var(--muted); }
+.thread-head.compact .thread-meta > * { flex: none; }
+.thread-head.compact .thread-meta > :not([hidden]) ~ :not([hidden])::before { content: "·"; margin: 0 7px; color: var(--muted); font-weight: 400; }
+.thread-head.compact .thread-meta .chan-banner, .thread-head.compact .thread-meta .pill { height: auto; padding: 0; background: none; border: 0; font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.thread-head.compact .thread-meta .chan-banner { color: var(--text-2, var(--text)); }
+.thread-head.compact .thread-meta .pill.open { color: var(--ok); }
+.thread-head.compact .thread-meta .pill.closed { color: var(--warn); }
+.thread-head.compact .thread-meta .thread-presence { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Right side */
+.hd-ai { display: inline-flex; align-items: center; gap: 6px; }
+.hd-ai:empty, .hd-ai:not(:has(> :not([hidden]))) { display: none; }
+.hd-ai .ai-timer { height: 28px; margin: 0; font-size: 12px; }
+.hd-ai .chat-note-btn { width: 24px; height: 24px; margin: 0; }
+.hd-sep { width: 1px; height: 22px; margin: 0 8px; background: var(--line); }
+.hd-ai:not(:has(> :not([hidden]))) + .hd-sep { display: none; }
+.thread-head.compact .thread-actions .icon-btn { width: 34px; height: 34px; border-radius: 10px; color: var(--muted); }
 .thread-head.compact .thread-actions .icon-btn:hover { color: var(--text); background: var(--panel-2); }
-.hd-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px !important; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--text-2, var(--text)); font-weight: 600; text-decoration: none; }
-.hd-btn:hover { border-color: var(--accent); color: var(--accent); }
-.hd-btn svg, .hd-more svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.hd-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px !important; min-width: 34px; padding: 0 10px; border-radius: 10px; border: 0; background: transparent; color: var(--muted); font-weight: 600; text-decoration: none; box-shadow: none; }
+.hd-btn:hover { background: var(--panel-2); color: var(--text); }
+.hd-btn svg, .hd-more svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .hd-more svg { stroke-width: 3.2; }
 .hd-lbl { font-size: 12.5px; white-space: nowrap; }
-@container (max-width: 1060px) { .hd-lbl { display: none; } .hd-btn { width: 32px; padding: 0; justify-content: center; } }
-.thread-head.compact .thread-actions .switch { height: 32px; margin-left: 4px; }
+@container (max-width: 1180px) { .hd-lbl { display: none; } .hd-btn { padding: 0; width: 34px; } }
+.thread-head.compact .thread-actions .switch { height: 34px; margin-left: 10px; padding: 0 12px 0 6px; }
 .hd-more-wrap { position: relative; }
 .hd-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; min-width: 200px; padding: 6px; display: flex; flex-direction: column; gap: 2px;
   border: 1px solid var(--line-2, var(--line)); border-radius: 12px; background: var(--panel); box-shadow: 0 14px 34px rgba(15, 23, 42, .18); }
@@ -2010,27 +2027,29 @@ body[data-view="faqs"] { --page-c: var(--c-teal); } body[data-view="support"] { 
 .hd-menu .hd-item.btn-danger { color: var(--danger); }
 .hd-menu .hd-item.btn-danger:hover { background: var(--danger-soft); }
 .hd-menu .hd-item[hidden] { display: none; }
-/* Two rows on a grid: [avatar | name + tags | actions], then [activity chips | who is handling]. */
-.thread-head.compact { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; column-gap: 0; row-gap: 8px; align-items: center; }
-.thread-head.compact > .back-btn { grid-column: 1; grid-row: 1; }
-.thread-head.compact > .dp-host { grid-column: 2; grid-row: 1; margin-right: 12px; }
-.thread-head.compact > .thread-title { grid-column: 3; grid-row: 1; }
-.thread-head.compact > .thread-actions { grid-column: 4; grid-row: 1; margin-left: 12px; }
-.thread-head.compact > .t-activity { grid-column: 1 / 4; grid-row: 2; min-width: 0; margin: 0; padding: 8px 12px 0 0; border-top: 1px solid var(--line); gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-.thread-head.compact > .t-activity::-webkit-scrollbar { display: none; }
-.thread-head.compact .act-chip { height: 24px; padding: 0 9px; font-size: 11.5px; flex: none; }
-.thread-head.compact > .hold-bar { grid-column: 4; grid-row: 2; margin: 0; padding: 8px 0 0; gap: 8px; border-top: 1px solid var(--line); flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
-.thread-head.compact > .t-activity[hidden] ~ .hold-bar { grid-column: 1 / -1; justify-content: space-between; }
-.thread-head.compact > .t-activity:not([hidden]) ~ .hold-bar .hold-txt small { display: none; }
-.thread-head.compact > .thread-search-bar, .thread-head.compact > .broadcast-members { grid-column: 1 / -1; }
+/* Second line: one soft band. */
+.hd-row2 { grid-column: 1 / 4; grid-row: 2; display: flex; align-items: center; gap: 6px; min-width: 0; height: 40px; padding: 0 8px; border-radius: 12px 0 0 12px; background: var(--panel-2); }
+.hd-tags { display: flex; align-items: center; gap: 4px; flex: none; }
+.hd-tags:not(:has(> :not([hidden]))) { display: none; }
+.hd-tags:has(> :not([hidden])) + .t-activity:not([hidden]) { border-left: 1px solid var(--line); padding-left: 8px; margin-left: 2px; }
+.hd-tags .tag { height: 22px; display: inline-flex; align-items: center; }
+.hd-row2 .t-activity { flex: 1 1 auto; min-width: 0; margin: 0; padding: 0; border: 0; gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.hd-row2 .t-activity::-webkit-scrollbar { display: none; }
+.hd-row2 .act-chip { height: 26px; padding: 0 10px; font-size: 11.5px; flex: none; background: var(--panel); }
+.hd-row2:not(:has(.hd-tags > :not([hidden]))):not(:has(> .t-activity:not([hidden]))) { display: none; }
+.thread-head.compact > .hold-bar { grid-column: 4; grid-row: 2; height: 40px; margin: 0; padding: 0 8px 0 12px; gap: 10px; border: 0; border-radius: 0 12px 12px 0; background: var(--panel-2); flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
+.hd-row2:not(:has(.hd-tags > :not([hidden]))):not(:has(> .t-activity:not([hidden]))) ~ .hold-bar { grid-column: 1 / -1; border-radius: 12px; justify-content: space-between; }
+.thread-head.compact > .hold-bar[hidden] { display: none; }
+.hd-row2:has(~ .hold-bar[hidden]) { grid-column: 1 / -1; border-radius: 12px; }
 .thread-head.compact .hold-status { flex: 0 1 auto; gap: 8px; min-width: 0; }
 .thread-head.compact .hold-status .hold-ic { width: 22px; height: 22px; font-size: 12px; }
 .thread-head.compact .hold-status .hold-txt { flex-direction: row; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
 .thread-head.compact .hold-status .hold-txt strong { font-size: 12.5px; }
-.thread-head.compact .hold-status .hold-txt small { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
-.thread-head.compact .hold-bar .btn, .thread-head.compact .hold-assign { height: 28px; min-height: 28px; }
-.thread-head.compact .thread-meta { flex-wrap: wrap; row-gap: 4px; }
+.thread-head.compact .hold-status .hold-txt small { display: none; }
+.hd-row2:not(:has(.hd-tags > :not([hidden]))):not(:has(> .t-activity:not([hidden]))) ~ .hold-bar .hold-txt small { display: inline; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.thread-head.compact .hold-bar .btn, .thread-head.compact .hold-assign { height: 30px; min-height: 30px; }
+.thread-head.compact > .thread-search-bar, .thread-head.compact > .broadcast-members { grid-column: 1 / -1; }
 @media (max-width: 1200px) {
   .thread-head.compact > .thread-actions { grid-column: 1 / -1; grid-row: 2; margin-left: 0; justify-content: flex-start; }
-  .thread-head.compact > .t-activity, .thread-head.compact > .hold-bar { grid-row: 3; }
+  .hd-row2, .thread-head.compact > .hold-bar { grid-row: 3; }
 }
