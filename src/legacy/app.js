@@ -2167,15 +2167,25 @@ function applyPreview(message, contact = null) {
     upsertContact({
       ...base,
       lastMessageAt: Math.max(Number(base.lastMessageAt) || 0, Number(message.createdAt) || 0),
-      lastMessage: { ...(last || {}), ...previewFromMessage(message) },
+      lastMessage: { ...(last || {}), ...previewFromMessage(last?.id === message.id && last.status ? newerStatus({ direction: "out", status: last.status }, message) : message) },
     });
   }
+}
+
+// Delivery steps only move forward. A website chat is "sent" before the send request even returns, so a late
+// "queued" copy of the same message must not put the clock back. A retry after a failure may restart it.
+const STATUS_RANK = { queued: 0, sending: 1, sent: 2, delivered: 3, read: 4 };
+function newerStatus(prev, next) {
+  if (!prev || prev.direction !== "out" || next.status === "failed" || prev.status === "failed") return next;
+  const a = STATUS_RANK[prev.status] ?? -1;
+  const b = STATUS_RANK[next.status] ?? -1;
+  return b < a ? { ...next, status: prev.status, sentAt: prev.sentAt, deliveredAt: prev.deliveredAt, readAt: prev.readAt } : next;
 }
 
 function upsertMessage(message) {
   if (!state.active || message.phone !== state.active.phone) return;
   const idx = state.messages.findIndex((m) => m.id === message.id);
-  if (idx >= 0) state.messages[idx] = message;
+  if (idx >= 0) state.messages[idx] = newerStatus(state.messages[idx], message);
   else state.messages.push(message);
   renderMessages();
 }
