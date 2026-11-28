@@ -9,7 +9,7 @@ export function PageShell({
   bodyClass,
   help = true,
   theme = true,
-  stylesheet = "/assets/styles.css?v=115",
+  stylesheet = "/assets/styles.css?v=116",
   robots,
   children,
 }: {
@@ -35,7 +35,7 @@ export function PageShell({
       </head>
       <body className={bodyClass}>
         <Providers>{children}</Providers>
-        {help ? <Script src="/assets/help.js?v=15" type="module" strategy="lazyOnload" /> : null}
+        {help ? <Script src="/assets/help.js?v=16" type="module" strategy="lazyOnload" /> : null}
       </body>
     </html>
   );

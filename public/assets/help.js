@@ -11,6 +11,7 @@ const TIPS = {
   "theme-btn": "Switch between dark and light colours.",
   "logout-btn": "Sign out of AutoPulse on this device.",
   "help-btn": "Explain the screen you are on, with a short demo.",
+  "rail-support": "New answers or questions in Support.",
   "dealership-switch": "Which dealership you are looking at. Chats, leads, stock and settings follow this choice.",
   "enable-calls-btn": "Allow this browser to make and receive phone calls with customers.",
   search: "Find a chat by customer name or phone number.",
@@ -107,6 +108,16 @@ const FIELD_TIPS = {
 
 // ---------- 2. feature help (popups) ----------
 const HELP = {
+  faqs: {
+    title: "FAQs",
+    body: "Answers to common questions, written by AutoPulse. Each answer can have pictures, videos, PDFs, files and links. AutoPulse admins add, edit, hide and order them.",
+    steps: ["Type a few words in the search box, or pick a topic.", "Click a question to open its answer and attachments.", "Can't find it? Press 'Ask support' to send your question to AutoPulse.", "AutoPulse admins: '+ Add FAQ' writes a new one (question, topic, answer, attachments); each FAQ has Edit, Publish / Unpublish, ↑ ↓ to order, and Delete. Drafts are hidden from dealers until published."],
+  },
+  support: {
+    title: "Support",
+    body: "Your questions and requests to AutoPulse, with the answers. You get an e-mail when AutoPulse answers, and the Support button shows a number when something is new.",
+    steps: ["'+ New query': write a subject and your question; attach screenshots (or paste them), a video, a PDF, files or a link.", "Click a query on the left to read the thread and reply.", "'Close query' when it is solved; writing again reopens it.", "Owners and managers see every query from their store; agents see the ones they opened.", "AutoPulse admins see every store's queries, filter by store or status, answer, and use '★ Make FAQ from this' to turn a good answer into an FAQ (saved as a draft first)."],
+  },
   dashboard: {
     title: "Dashboard",
     body: "Your store at a glance: cars in stock, car page views and taps, leads, appointments and chats, then Trends: charts of everything over 7, 30 or 90 days. Each card opens its section.",
