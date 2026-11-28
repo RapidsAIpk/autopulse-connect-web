@@ -12,6 +12,7 @@ export function initClarity(deps) {
   addFeaturesTab();
   addRestrictionChip();
   addLinksButton();
+  addNoteIcon();
   setInterval(tick, 1000);
   refreshStoreStatus();
 }
@@ -77,6 +78,54 @@ export function paintTimer(c) {
   pill.onclick = () => openSettingsTab("ai");
 }
 
+// ============================== chat note → header icon ==============================
+// What this chat allows (24-hour window, live chat, AI pause…) used to be a line above the message box. It now lives
+// behind a small icon in the chat header: ⓘ for information, an amber ⚠ when you can't reply here. Click to read.
+function addNoteIcon() {
+  const { h } = ctx;
+  const note = document.getElementById("composer-note");
+  if (!note || document.getElementById("chat-note-btn")) return;
+  const btn = h("button", { type: "button", class: "chat-note-btn", id: "chat-note-btn", hidden: true, "aria-haspopup": "dialog", "aria-expanded": "false" });
+  const pop = h("div", { class: "chat-note-pop", id: "chat-note-pop", role: "dialog", hidden: true });
+  pop.append(note); // app.js keeps filling #composer-note; it is now read inside this popover
+  note.classList.add("in-pop");
+  btn.addEventListener("click", (e) => { e.stopPropagation(); toggleNotePop(pop.hidden); });
+  document.addEventListener("click", (e) => { if (!pop.hidden && !pop.contains(e.target) && e.target !== btn) toggleNotePop(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleNotePop(false); });
+  btn._pop = pop;
+  document.body.append(pop);
+}
+
+function toggleNotePop(open) {
+  const btn = document.getElementById("chat-note-btn");
+  const pop = document.getElementById("chat-note-pop");
+  if (!btn || !pop) return;
+  if (open && !btn.hidden) {
+    const r = btn.getBoundingClientRect();
+    pop.hidden = false;
+    pop.style.top = `${Math.round(r.bottom + 8)}px`;
+    pop.style.left = `${Math.round(Math.max(12, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12)))}px`;
+  } else pop.hidden = true;
+  btn.setAttribute("aria-expanded", String(!pop.hidden));
+}
+
+/** Called after the open chat's note is worked out (app.js). */
+export function paintNoteIcon() {
+  const note = document.getElementById("composer-note");
+  const btn = document.getElementById("chat-note-btn");
+  const meta = document.querySelector(".thread-meta");
+  if (!note || !btn || !meta) return;
+  if (btn.parentElement !== meta) meta.append(btn);
+  const text = note.textContent.trim();
+  const blocked = note.dataset.blocked === "1";
+  btn.hidden = note.hidden || !text;
+  btn.className = `chat-note-btn${blocked ? " blocked" : ""}`;
+  btn.textContent = blocked ? "⚠" : "i";
+  btn.title = blocked ? "You can't reply here right now. Click to see why." : "About this chat. Click to read.";
+  btn.setAttribute("aria-label", btn.title);
+  if (btn.hidden) toggleNotePop(false);
+}
+
 function tick() {
   if (!takeovers.size) return;
   const now = Date.now();
@@ -114,6 +163,24 @@ export async function refreshStoreStatus() {
   if (!document.getElementById("features-panel")?.hidden) paintFeatures();
 }
 
+// The ⚠ in the top bar: an icon only (details in its popup). Anyone it bothers can hide it for themselves; it comes
+// back when something changes (another switch, a new reason, a new end date, the subscription stopping).
+function chipSignature() {
+  const sub = status?.subscription || {};
+  return JSON.stringify([sub.on, sub.on && sub.ending ? sub.endsOn : null, (status?.restrictions || []).map((x) => [x.key, x.note || ""])]);
+}
+function hiddenKey() {
+  return `ap-alert-hidden:${ctx.state?.me?.id || ""}:${status?.storeId || status?.store || ""}`;
+}
+function chipHidden() {
+  try { return localStorage.getItem(hiddenKey()) === chipSignature(); } catch { return false; }
+}
+function hideChip() {
+  try { localStorage.setItem(hiddenKey(), chipSignature()); } catch { /* private window: it just stays */ }
+  paintChip();
+  ctx.toast?.("Hidden for you. It comes back if anything changes. Everything is still in Settings → Subscription & features.", "success");
+}
+
 function paintChip() {
   const chip = document.getElementById("restrict-chip");
   if (!chip) return;
@@ -122,15 +189,16 @@ function paintChip() {
   const ending = sub && sub.on && sub.ending;
   const off = sub && !sub.on;
   const count = r.filter((x) => x.key !== "unsubscribed").length;
-  if (!status?.store || (!count && !ending && !off)) { chip.hidden = true; return; }
+  if (!status?.store || (!count && !ending && !off) || chipHidden()) { chip.hidden = true; return; }
   chip.hidden = false;
   chip.className = `restrict-chip${off || (ending && sub.daysLeft <= 7) ? " red" : ""}`;
   const parts = [];
   if (off) parts.push("Not subscribed");
   else if (ending) parts.push(`Subscription ends ${fmtDate(sub.endsOn)}`);
-  if (count) parts.push(`${count} restriction${count === 1 ? "" : "s"}`);
-  chip.replaceChildren(ctx.h("span", { class: "restrict-ic", text: "⚠" }), ctx.h("span", { text: parts.join(" · ") }));
-  chip.title = "What AutoPulse switched off for this store, and why. Click for details.";
+  if (count) parts.push(`${count} feature${count === 1 ? "" : "s"} switched off by AutoPulse`);
+  chip.replaceChildren(ctx.h("span", { class: "restrict-ic", text: "⚠" }));
+  chip.title = `${parts.join(" · ")}. Click for details.`;
+  chip.setAttribute("aria-label", chip.title);
 }
 
 const fmtDate = (d) => {
@@ -154,6 +222,7 @@ function openRestrictions() {
     h("p", { class: "muted small", text: admin ? "Change it in Stores → Actions → Store controls (or Subscribe)." : "Your team can still reply where only the AI is off. To turn something back on, ask AutoPulse in Support." }),
     h("div", { class: "row-end" },
       admin ? null : h("button", { type: "button", class: "btn", text: "Ask AutoPulse", onclick: () => { dlg.close(); ctx.showView("support"); } }),
+      h("button", { type: "button", class: "btn btn-ghost", text: "Hide this icon", title: "Only for you. It comes back if anything changes.", onclick: () => { dlg.close(); hideChip(); } }),
       h("button", { type: "button", class: "btn btn-primary", text: "See all features", onclick: () => { dlg.close(); openSettingsTab("features"); } })));
   dlg.addEventListener("close", () => setTimeout(() => dlg.remove(), 50));
   document.body.append(dlg);
