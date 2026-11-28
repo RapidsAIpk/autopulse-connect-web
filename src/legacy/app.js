@@ -1640,7 +1640,7 @@ function renderHold(contact) {
   const bits = [];
   const dept = contact.department ? DEPT_NAMES[contact.department] || contact.department : "";
   // Left: who has the chat, in words, and what that means for you.
-  const status = (icon, title, sub, cls = "") => h("div", { class: `hold-status${cls ? ` ${cls}` : ""}` },
+  const status = (icon, title, sub, cls = "") => h("div", { class: `hold-status${cls ? ` ${cls}` : ""}`, title: sub || "" },
     h("span", { class: "hold-ic", "aria-hidden": "true", text: icon }),
     h("div", { class: "hold-txt" }, h("strong", { text: title }), sub ? h("small", { text: sub }) : null));
   if (holding) {
