@@ -9,6 +9,7 @@ import { initAccount, loadAccountPanel, loadEnquiries, loadStorePanel, loadWidge
 import { initStores, loadMessaging, loadOutbound, loadSite, loadStores, showImpersonation } from "./stores.js";
 import { billingTabFor, handlePausedReturn, initBilling, loadBillingAdmin, loadBillingPanel, paintPausedBilling } from "./billing.js";
 import { initSignin, loadSignin } from "./signin.js";
+import { initClarity, setTakeover, timerTag, aiSettingsLink, paintTimer, refreshStoreStatus, loadFeatures, syncLinksButton, hideLinksPop } from "./clarity.js";
 import { initSupport, mountFaqs, mountSupport, refreshSupportBadge, onSupportEvent, openOverlay } from "./support.js";
 import { applyStoreKind, initTeam, loadAiProfile, loadMyPage, loadStorePage, loadStoreSettings, loadTeam } from "./team.js";
 import { initStock, loadStockPanel } from "./stock.js";
@@ -528,6 +529,7 @@ function showView(view) {
     loadFacebookPage().then(() => paintSettingsTabs());
     loadBillingPanel();
     loadBillingAdmin();
+    loadFeatures().then(() => paintSettingsTabs());
     loadSignin();
   }
   if (view === "leads") {
@@ -540,7 +542,7 @@ function showView(view) {
   if (view === "vehicles") { loadVehiclesView(); loadStockPanel(); }
   if (view === "chatwidget") { loadWidgetPanel(); loadPopups(); loadTrackingPanel(); }
   if (view === "visitors") loadVisitorsView();
-  if (view === "store") { loadStorePanel(); loadAccountPanel(); loadSettings(); if (state.store?.inboxOnly) loadAiProfile(); }
+  if (view === "store") { loadStorePanel(); loadAccountPanel(); loadSettings(); loadAiProfile(); }
   if (view === "staff" && state.store?.hasTeam) { loadTeam(); loadStoreSettings(); }
   else if (view === "staff" && state.store?.crmTeam) loadTeam();
   if (view === "pages" && (state.store?.hasTeam || state.store?.crmTeam)) { loadStorePage(); loadMyPage(); }
@@ -658,22 +660,10 @@ const isSuperAdmin = () => accountKind() === "superadmin" && !state.impersonated
  * Store controls: what AutoPulse switched off for this store, on the Dashboard and the Inbox. The dealer's team
  * learns why something is missing; an AutoPulse admin viewing the store sees it at a glance and where to change it.
  */
-function renderRestrictions(items) {
-  const admin = Boolean(state.restrictionsAdmin);
-  for (const viewId of ["view-dashboard", "view-inbox"]) {
-    const view = $(viewId);
-    if (!view) continue;
-    let bar = view.querySelector(":scope > .restrictions-bar");
-    if (!items.length) { if (bar) bar.hidden = true; continue; }
-    if (!bar) { bar = h("div", { class: "restrictions-bar", role: "status" }); view.prepend(bar); }
-    bar.hidden = false;
-    bar.replaceChildren(
-      h("span", { class: "restrictions-ic", "aria-hidden": "true", text: "⚠" }),
-      h("div", { class: "restrictions-txt" },
-        h("strong", { text: admin ? "Switched off for this store by AutoPulse" : "AutoPulse has switched some things off for your dealership" }),
-        h("ul", {}, ...items.map((r) => h("li", { text: r.text }))),
-        h("small", { text: admin ? "Change it in Stores → Actions → Store controls (or Subscribe)." : "Contact AutoPulse (contact@autopulse.ai) to turn them back on." })));
-  }
+function renderRestrictions() {
+  // Shown as a ⚠ chip in the top bar with a popup and the admin's reasons (clarity.js); old banners stay hidden.
+  for (const bar of document.querySelectorAll(".restrictions-bar")) bar.hidden = true;
+  refreshStoreStatus();
 }
 
 function syncDealershipChrome() {
@@ -883,6 +873,7 @@ function insertComposer(text, { newline = false } = {}) {
 
 function applyAiInbound(enabled, platforms, takeover) {
   if (takeover !== undefined && $("ai-takeover")) $("ai-takeover").value = String(takeover);
+  if (takeover !== undefined && Number(takeover)) state.aiTakeoverMinutes = Number(takeover);
   state.aiInboundEnabled = Boolean(enabled);
   if (Array.isArray(platforms)) state.aiPlatforms = platforms;
   syncComingSoon();
@@ -1134,6 +1125,7 @@ function contactTags(c) {
     ...(() => { const t = leadTag(c); return t ? [h("span", { class: `tag ${t.cls}`, text: t.text, title: t.title, role: "button", tabindex: "0", onclick: open })] : []; })(),
     c.unreplied && !c.hasBlocked ? h("span", { class: "tag unreplied", text: "Unreplied" }) : null,
     c.botEnabled || (isWeb(c.phone) && !isLiveWeb(c.phone)) ? null : h("span", { class: "tag human", text: "Human" }),
+    c.botEnabled ? null : timerTag(c.phone),
     c.holderName ? h("span", { class: "tag holder", text: c.holderName, title: `${c.holderName} is handling this chat` }) : null,
   ].filter(Boolean);
   return tags.length ? h("span", { class: "contact-tags" }, ...tags) : null;
@@ -1212,6 +1204,7 @@ async function loadOlderMessages(button) {
 async function openContact(phone) {
   const { contact, messages } = await api(`/api/contacts/${encodeURIComponent(phone)}`);
   state.active = contact;
+  setTakeover(contact.phone, contact.takeoverAt, contact.takeoverMinutes); // "AI answers in m:ss" countdown
   // The chat list shows the same tags (lead, department…): refresh this chat's entry too.
   const listed = state.contacts.findIndex((x) => x.phone === contact.phone);
   if (listed >= 0) {
@@ -1437,10 +1430,12 @@ function renderThreadHeader() {
     note.textContent = `Flagged as ${flagLabel(c.flag).toLowerCase()} — AI handed this chat to a human. Reply below, or unflag to let AI resume.`;
   } else if (c.botEnabled) {
     note.hidden = false;
-    note.textContent = "AI is replying to this chat. Turn it off to take over, or send a one-off reply below.";
+    const n = state.aiTakeoverMinutes || 3;
+    note.replaceChildren(`AI is replying to this chat. If you reply, the AI steps back for this chat so the customer doesn't get two answers; if the customer then waits ${n} min with no reply, the AI answers again. `, aiSettingsLink());
   } else {
     note.hidden = false;
-    note.textContent = "You're handling this chat. Turn AI on to let the bot reply.";
+    const n = state.aiTakeoverMinutes || 3;
+    note.replaceChildren(`You're handling this chat: the AI stays quiet. If the customer writes and nobody replies within ${n} min, the AI answers. Turn AI on to hand it back (it answers any waiting message). `, aiSettingsLink());
   }
   const locked = holdDecision(c) === "request";
   if (locked) {
@@ -1460,6 +1455,8 @@ function renderThreadHeader() {
   $("emoji-btn").disabled = !canType || locked || website;
   $("attach-btn").disabled = !canType || locked || website;
   $("inventory-btn").disabled = !canType || locked || website;
+  syncLinksButton();
+  paintTimer(c);
   renderHold(c);
   if (!canType) stopVoice({ discard: true });
   syncComposerSend();
@@ -2238,6 +2235,7 @@ function connectEvents() {
   });
   source.addEventListener("visitor", (ev) => { visitorBack(JSON.parse(ev.data)); });
   source.addEventListener("team", (ev) => { teamAlert(JSON.parse(ev.data)); });
+  source.addEventListener("takeover", (ev) => { try { const d = JSON.parse(ev.data || "{}"); setTakeover(d.phone, d.at, d.minutes); } catch {} });
   source.addEventListener("support", (ev) => { try { onSupportEvent(JSON.parse(ev.data || "{}")); } catch { onSupportEvent({}); } });
   source.addEventListener("settings", (ev) => {
     const data = JSON.parse(ev.data);
@@ -2871,7 +2869,9 @@ function wire() {
     emojiPop.hidden = true;
     attachPop.hidden = true;
     $("inventory-pop").hidden = true;
+    hideLinksPop();
   }
+  state.hideComposerPops = hideComposerPops;
 
   function onAttachPicked(e) {
     const file = e.target.files?.[0];
@@ -3650,6 +3650,8 @@ async function init() {
   initBilling({ $, h, api, toast, state, confirmDialog, showDealerTab: billingTabFor(me), onStoreBillingClosed: () => { if (state.view === "stores") loadStores(); },
     openBillingTab: () => { showView("settings"); setTimeout(() => document.querySelector('#settings-tabs [data-stab="billing"]')?.click(), 300); } });
   initTeam({ $, h, api, toast, state, confirmDialog, refreshTabs: () => paintSettingsTabs($("settings-grid")?.dataset.active) });
+  initClarity({ $, h, api, toast, state, showView, insertComposer, isSuperAdmin, refreshList: () => renderContacts(),
+    hideComposerPops: () => state.hideComposerPops?.(), refreshTabs: () => paintSettingsTabs($("settings-grid")?.dataset.active) });
   initStock({ $, h, api, toast, state, confirmDialog, reloadVehicles: () => loadVehiclesView() });
   initStart({ $, h, api, toast, state, showView });
   initPopups({ $, h, api, toast, confirmDialog });
