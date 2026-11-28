@@ -9,6 +9,7 @@ import { initAccount, loadAccountPanel, loadEnquiries, loadStorePanel, loadWidge
 import { initStores, loadMessaging, loadOutbound, loadSite, loadStores, showImpersonation } from "./stores.js";
 import { billingTabFor, handlePausedReturn, initBilling, loadBillingAdmin, loadBillingPanel, paintPausedBilling } from "./billing.js";
 import { initSignin, loadSignin } from "./signin.js";
+import { initSupport, mountFaqs, mountSupport, refreshSupportBadge, onSupportEvent, openOverlay } from "./support.js";
 import { applyStoreKind, initTeam, loadAiProfile, loadMyPage, loadStorePage, loadStoreSettings, loadTeam } from "./team.js";
 import { initStock, loadStockPanel } from "./stock.js";
 import { initStart, loadStart } from "./start.js";
@@ -491,6 +492,8 @@ const VIEW_META = {
   activity: ["Activity", "Audit trail and system status"],
   settings: ["Settings", "Your account, AI switches, e-mails and alerts"],
   stores: ["Stores", "Every dealership: contacts, subscription, leads, and admin tools"],
+  faqs: ["FAQs", "Answers to common questions, from AutoPulse"],
+  support: ["Support", "Questions and requests to AutoPulse, with the answers"],
 };
 
 function showView(view) {
@@ -502,6 +505,11 @@ function showView(view) {
   $("view-title").textContent = VIEW_META[view][0];
   $("view-subtitle").textContent = VIEW_META[view][1];
   if (view === "team") loadUsers();
+  if (view === "faqs") mountFaqs($("faqs-host"));
+  if (view === "support") {
+    mountSupport($("support-host"), { openId: state.supportOpenId || null });
+    state.supportOpenId = null;
+  }
   if (view === "activity") {
     loadActivity();
     loadEnquiries();
@@ -586,6 +594,7 @@ async function loadStats() {
     if (s.dealership && !state.dealership?.id) applyDealership(s.dealership, s.dealerships);
     else if (s.dealerships) fillDealershipSwitch(s.dealerships);
     syncDealershipChrome();
+    refreshSupportBadge();
     const badge = $("rail-unread");
     badge.hidden = !s.unread;
     badge.textContent = s.unread > 99 ? "99+" : s.unread;
@@ -2229,6 +2238,7 @@ function connectEvents() {
   });
   source.addEventListener("visitor", (ev) => { visitorBack(JSON.parse(ev.data)); });
   source.addEventListener("team", (ev) => { teamAlert(JSON.parse(ev.data)); });
+  source.addEventListener("support", (ev) => { try { onSupportEvent(JSON.parse(ev.data || "{}")); } catch { onSupportEvent({}); } });
   source.addEventListener("settings", (ev) => {
     const data = JSON.parse(ev.data);
     if (state.crm && !data.crm) {
@@ -3520,6 +3530,8 @@ async function init() {
   const openStoreMatch = /^#open-store=([^&]+)&view=([a-z-]+)$/.exec(location.hash);
   const me = await api("/api/me");
   setAppTimeZone(me.user?.timeZone || ""); // Settings → My account → Time zone
+  // Help → FAQs and Support (also reachable from the "not subscribed" screen below).
+  initSupport({ $, h, api, toast, state, confirmDialog, fileToPayload, formatBubbleText, openSupport: () => showView("support") });
   // Store controls: AutoPulse paused this dealership's sign-in. Show why, with Sign out, instead of the inbox.
   if (me.paused) {
     state.csrf = me.csrfToken || state.csrf;
@@ -3545,6 +3557,9 @@ async function init() {
         : "AutoPulse has paused access to this dealership for now. Nothing has been deleted. Please contact AutoPulse." }),
       seePlans,
       plans,
+      unsubscribed ? h("div", { class: "paused-help" },
+        h("button", { type: "button", class: "btn", text: "❓ FAQs", onclick: () => openOverlay("faqs") }),
+        h("button", { type: "button", class: "btn", text: "💬 Contact support", onclick: () => openOverlay("support") })) : null,
       h("a", { class: "btn", href: "mailto:contact@autopulse.ai", text: "contact@autopulse.ai" }),
       h("button", { type: "button", class: "btn btn-primary", onclick: async () => { try { await api("/api/auth/logout", { method: "POST" }); } catch {} location.replace("/login"); } }, "Sign out"))));
     if (mayPay && fromStripe) seePlans.click();
@@ -3647,6 +3662,13 @@ async function init() {
   const owner = ["owner", "member"].includes(accountKind()); // inbox-only dealership accounts
   // "/#view=<view>[-<settings tab>][&find=<json>]": open that screen. find comes from the feature & test sheet's
   // "Show me in the app" link; Help (help.js) then highlights the button or panel a tester is looking for.
+  // "/admin#view=support&q=<id>" (from a support e-mail): open that query.
+  const wantedQuery = /^#view=support&q=(\d+)$/.exec(location.hash);
+  if (wantedQuery) {
+    history.replaceState(null, "", location.pathname);
+    state.supportOpenId = Number(wantedQuery[1]);
+    showView("support");
+  }
   const wantedView = /^#view=([a-z]+)(?:-([a-z]+))?(?:&find=(.+))?$/.exec(location.hash);
   if (wantedView && VIEW_META[wantedView[1]]) {
     history.replaceState(null, "", location.pathname);
