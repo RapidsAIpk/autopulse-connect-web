@@ -13,6 +13,7 @@ export function initClarity(deps) {
   addRestrictionChip();
   addLinksButton();
   addNoteIcon();
+  compactHeader();
   setInterval(tick, 1000);
   refreshStoreStatus();
 }
@@ -56,6 +57,8 @@ export function paintTimer(c) {
   let pill = document.getElementById("ai-timer");
   if (!pill) pill = h("span", { class: "ai-timer", id: "ai-timer", tabindex: "0", role: "button" });
   if (pill.parentElement !== meta) meta.append(pill);
+  const noteBtn = document.getElementById("chat-note-btn");
+  if (noteBtn && noteBtn.parentElement !== meta) meta.append(noteBtn);
   const t = c ? takeovers.get(c.phone) : null;
   const n = t?.minutes || minutes();
   if (!c || c.isGroup || c.isBroadcast) { pill.hidden = true; return; }
@@ -124,6 +127,64 @@ export function paintNoteIcon() {
   btn.title = blocked ? "You can't reply here right now. Click to see why." : "About this chat. Click to read.";
   btn.setAttribute("aria-label", btn.title);
   if (btn.hidden) toggleNotePop(false);
+}
+
+// ============================== compact chat header ==============================
+// One tidy line: who (name, channel, status tags) on the left; the main actions as icon buttons on the right (labels
+// show when there is room); rare or risky actions in a ⋯ menu. Activity chips and "You're handling" share one slim row.
+const HD_ICONS = {
+  "customer-page-btn": "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5",
+  "save-lead-btn": "M10 11a3.8 3.8 0 1 0 0-7.6 3.8 3.8 0 0 0 0 7.6zM3.5 19.5c.7-3.4 3.3-5.3 6.5-5.3 1.3 0 2.5.3 3.5.9M18 13.5v6M15 16.5h6",
+  "book-visit-btn": "M5 6.5h14v13H5zM5 10.5h14M9 4v4M15 4v4M9.5 14.5h2v2h-2z",
+};
+const MORE_IDS = ["call-btn", "invite-btn", "flag-btn", "unflag-btn", "delete-list-btn", "delete-room-btn", "erase-customer-btn"];
+function svgIcon(d) {
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(NS, "path");
+  path.setAttribute("d", d);
+  svg.append(path);
+  return svg;
+}
+function compactHeader() {
+  const { h } = ctx;
+  const head = document.querySelector(".thread-head");
+  const actions = document.querySelector(".thread-actions");
+  if (!head || !actions || document.getElementById("hd-more")) return;
+  head.classList.add("compact");
+  // The reply window / live status sits with the other tags under the name.
+  const win = document.getElementById("t-window");
+  const meta = document.querySelector(".thread-meta");
+  if (win && meta) document.getElementById("t-channel")?.after(win);
+  for (const [id, d] of Object.entries(HD_ICONS)) {
+    const b = document.getElementById(id);
+    if (!b) continue;
+    const label = b.textContent.trim();
+    b.classList.add("hd-btn");
+    b.title = b.title || label;
+    b.setAttribute("aria-label", label);
+    b.replaceChildren(svgIcon(d), h("span", { class: "hd-lbl", text: label }));
+  }
+  const menu = h("div", { class: "hd-menu", id: "hd-menu", role: "menu", hidden: true });
+  const more = h("button", { type: "button", class: "icon-btn hd-more", id: "hd-more", title: "More actions", "aria-label": "More actions", "aria-haspopup": "menu", "aria-expanded": "false" },
+    svgIcon("M6 12h.01M12 12h.01M18 12h.01"));
+  const wrap = h("div", { class: "hd-more-wrap" }, more, menu);
+  for (const id of MORE_IDS) {
+    const b = document.getElementById(id);
+    if (b) { b.classList.add("hd-item"); b.classList.remove("btn-sm"); menu.append(b); }
+  }
+  const toggle = document.querySelector(".thread-actions .switch");
+  actions.insertBefore(wrap, toggle || null);
+  const sync = () => { more.hidden = ![...menu.children].some((b) => !b.hidden); if (more.hidden) close(); };
+  const close = () => { menu.hidden = true; more.setAttribute("aria-expanded", "false"); };
+  more.addEventListener("click", (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; more.setAttribute("aria-expanded", String(!menu.hidden)); });
+  menu.addEventListener("click", () => setTimeout(close, 0));
+  document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  new MutationObserver(sync).observe(menu, { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+  sync();
 }
 
 function tick() {
